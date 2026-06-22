@@ -184,6 +184,8 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                   ]WY.                                                                              
                 /j"  
                 
+                                            https://space.spacecp.workers.dev/
+                                            https://space-obfuscator.spacecp.workers.dev/
                                             https://discord.gg/7dt2A6DJZA
 ]]--"""
     return f"{banner}\n{current_code}\n"
