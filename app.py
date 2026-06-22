@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Servidor FastAPI (Anti-AI Metatable Virtualization)
+#   Servidor FastAPI (Extreme Anti-AI Metatable Virtualization)
 # ================================================
 
 from fastapi import FastAPI
@@ -12,11 +12,14 @@ from typing import Optional
 from datetime import datetime
 import os
 import random
+import asyncio
+import urllib.request
+import threading
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Anti-AI Lua Protection Service",
-    version="10.2.0"
+    version="11.0.0"
 )
 
 app.add_middleware(
@@ -30,7 +33,7 @@ app.add_middleware(
 class ObfuscateRequest(BaseModel):
     code: str
     mode: str = "heavy"
-    layers: Optional[int] = 5  # Recibe el número exacto del frontend
+    layers: Optional[int] = 5
 
 class ObfuscateResponse(BaseModel):
     success: bool
@@ -41,36 +44,66 @@ class ObfuscateResponse(BaseModel):
     mode_used: str = ""
     timestamp: str = ""
 
-# OPTIMIZACIÓN: random.choices es mucho más rápido y ligero en memoria para Python
-def generate_illusion_var(length=14):
-    return "_" + "".join(random.choices("O0I1l", k=length))
+# ================================================
+# TAREA EN SEGUNDO PLANO: EVITAR QUE EL SERVIDOR DUERMA
+# ================================================
+def ping_self():
+    """Hace ping al propio servidor cada 10 minutos para evitar que servicios como Render lo suspendan"""
+    while True:
+        try:
+            # Hace una petición rápida a su propia ruta de salud
+            urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
+        except:
+            pass
+        import time
+        time.sleep(600)  # Duerme por 10 minutos
+
+@app.on_event("startup")
+async def startup_event():
+    # Inicia el hilo de auto-ping en segundo plano cuando el servidor arranca
+    thread = threading.Thread(target=ping_self, daemon=True)
+    thread.start()
+
+# ================================================
+# MOTORES DE OFUSCACIÓN ANTI-IA AVANZADOS
+# ================================================
+
+def generate_illusion_var(length=random.randint(18, 28)):
+    """Genera nombres de variables visualmente confusos y largos"""
+    return "_" + "".join(random.choices(["O", "0", "I", "l", "_"], k=length))
+
+def math_obf(n: int) -> str:
+    """Oculta números reales detrás de operaciones matemáticas aleatorias para confundir IAs"""
+    if random.choice([True, False]):
+        a = random.randint(100, 5000)
+        b = a - n
+        return f"({a} - {b})" if b >= 0 else f"({a} + {abs(b)})"
+    else:
+        a = random.randint(2, 10)
+        b = n * a
+        return f"({b} / {a})"
 
 def generate_anti_ai_junk() -> str:
+    """Genera bloques de código Lua funcional pero inútil para destruir el contexto de las IAs"""
     junk = ""
-    # Genera scripts basura dinámicos para confundir descompiladores
-    for _ in range(random.randint(1, 2)):
-        v1, v2, v3, v4 = generate_illusion_var(12), generate_illusion_var(12), generate_illusion_var(14), generate_illusion_var(6)
+    for _ in range(random.randint(2, 4)):
+        v1, v2, v3 = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
         
+        # Mezcla pcalls, metatables infinitas y math aleatorio
         junk += (
-            f"local {v1} = {random.randint(100, 9999)}; "
-            f"local {v2} = function({v3}) "
-            f"  local {v1} = {v3} and {random.randint(10, 50)}; "
-            f"  for {v4} = 1, {random.randint(3, 8)} do "
-            f"    {v1} = ({v1} or 0) + {random.randint(1, 5)}; "
+            f"local {v1} = {math_obf(random.randint(10, 9999))}; "
+            f"local {v2} = setmetatable({{{math_obf(1)}, {math_obf(2)}}}, {{__index = function(t, k) return k * {math_obf(3)} end}}); "
+            f"pcall(function() "
+            f"  for {v3} = {math_obf(1)}, {math_obf(random.randint(3, 7))} do "
+            f"    {v1} = {v1} + {v2}[{v3}]; "
             f"  end "
-            f"  return {v1}; "
-            f"end; "
-            f"if {v2}({v1}) == -99999 then "
-            f"  local {v3} = setmetatable({{}}, {{__index = function(t,k) return k end}}); "
-            f"  {v1} = {v3}[{random.randint(1, 100)}]; "
-            f"end; "
+            f"end); "
+            f"if {v1} == {math_obf(-999999)} then return function() end end; "
         )
     return junk
 
 def obfuscate_single_layer(code: str) -> str:
-    """
-    Aplica una capa de ofuscación utilizando virtualización por tabla balanceada.
-    """
+    """Capa de virtualización y encriptación basada en state-machines y math obfuscation"""
     base_key = random.randint(20, 180)
     multiplier = random.randint(3, 9)
     
@@ -84,15 +117,16 @@ def obfuscate_single_layer(code: str) -> str:
         
     encoded_hex = encoded_bytes.hex()
     
-    # Fragmentación segura en tablas para evitar colapso de registros de Lua (Error 255)
+    # Fragmentación segura en tablas
     chunk_size = 2000 
     chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
     table_elements = ", ".join(f'"{c}"' for c in chunks)
     
-    # Generación de variables fantasma
+    # Variables fantasma
     v_hex, v_proxy, v_res, v_state, v_idx, v_last = (generate_illusion_var() for _ in range(6))
     f_sub, f_tonum, f_char, f_insert, f_concat, f_load = (generate_illusion_var() for _ in range(6))
     
+    # Inyección de ruido Anti-IA antes y después
     junk_pre = generate_anti_ai_junk()
     junk_post = generate_anti_ai_junk()
     
@@ -102,33 +136,33 @@ def obfuscate_single_layer(code: str) -> str:
         f"local {v_hex} = {f_concat}({{{table_elements}}}); "
         f"local {v_proxy} = setmetatable({{}}, {{ "
         f"  __index = function(t, k) "
-        f"    local s_str = {f_sub}({v_hex}, k, k + 1); "
+        f"    local s_str = {f_sub}({v_hex}, k, k + {math_obf(1)}); "
         f"    if s_str == \"\" then return nil end; "
-        f"    return ({f_tonum}(s_str, 16) + k) % 256; "
+        f"    return ({f_tonum}(s_str, {math_obf(16)}) + k) % {math_obf(256)}; "
         f"  end "
         f"}}); "
         f"local {v_res} = {{}}; "
-        f"local {v_state} = 1; "
-        f"local {v_idx} = 1; "
-        f"local {v_last} = {base_key}; "
+        f"local {v_state} = {math_obf(1)}; "
+        f"local {v_idx} = {math_obf(1)}; "
+        f"local {v_last} = {math_obf(base_key)}; "
     )
     
     loop_logic = (
-        f"while {v_state} ~= 0 do "
-            f"if {v_state} == 1 then "
-                f"if {v_idx} > #{v_hex} then {v_state} = 4 else {v_state} = 2 end; "
-            f"elseif {v_state} == 2 then "
+        f"while {v_state} ~= {math_obf(0)} do "
+            f"if {v_state} == {math_obf(1)} then "
+                f"if {v_idx} > #{v_hex} then {v_state} = {math_obf(4)} else {v_state} = {math_obf(2)} end; "
+            f"elseif {v_state} == {math_obf(2)} then "
                 f"local m_val = {v_proxy}[{v_idx}]; "
-                f"if not m_val then {v_state} = 4; else "
-                f"  local c_byte = (m_val - {v_idx}) % 256; "
-                f"  local dec_b = (c_byte - {v_last} - {multiplier}) % 256; "
+                f"if not m_val then {v_state} = {math_obf(4)}; else "
+                f"  local c_byte = (m_val - {v_idx}) % {math_obf(256)}; "
+                f"  local dec_b = (c_byte - {v_last} - {math_obf(multiplier)}) % {math_obf(256)}; "
                 f"  {f_insert}({v_res}, {f_char}(dec_b)); "
-                f"  {v_last} = c_byte; {v_state} = 3; "
+                f"  {v_last} = c_byte; {v_state} = {math_obf(3)}; "
                 f"end; "
-            f"elseif {v_state} == 3 then "
-                f"{v_idx} = {v_idx} + 2; {v_state} = 1; "
-            f"elseif {v_state} == 4 then "
-                f"{v_state} = 0; "
+            f"elseif {v_state} == {math_obf(3)} then "
+                f"{v_idx} = {v_idx} + {math_obf(2)}; {v_state} = {math_obf(1)}; "
+            f"elseif {v_state} == {math_obf(4)} then "
+                f"{v_state} = {math_obf(0)}; "
             f"end "
         f"end; "
         f"{junk_post} "
@@ -136,15 +170,13 @@ def obfuscate_single_layer(code: str) -> str:
     
     run_logic = (
         f"local f, e = {f_load}({f_concat}({v_res})); "
-        f"if not f then error(tostring(e)) end; "
+        f"if not f then pcall(function() error(tostring(e)) end) end; "
         f"return f(...); "
     )
     
     return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...)"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    # CORRECCIÓN: Toma las capas que pidió el usuario y las limita entre 1 y 8
-    # para evitar que saturen el servidor con peticiones infinitas.
     actual_layers = max(1, min(requested_layers, 8))
     
     current_code = code
@@ -184,7 +216,7 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                   ]WY.                                                                              
                 /j"  
                 
-                                        https://space.spacecp.workers.dev/
+                                            ttps://space.spacecp.workers.dev/
                                 https://space-obfuscator.spacecp.workers.dev/
                         https://discord.gg/7dt2A6DJZA
 ]]--"""
@@ -204,12 +236,10 @@ async def obfuscate(request: ObfuscateRequest):
         if not request.code or not request.code.strip():
             return ObfuscateResponse(success=False, error="El código está vacío")
         
-        # Limite de peso: 10 MB (Suficiente para soportar múltiples capas)
         max_size = 10 * 1024 * 1024 
         if len(request.code) > max_size:
             return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
         
-        # Obtenemos las capas solicitadas desde el JSON del frontend
         layers_to_apply = request.layers if request.layers is not None else 5
         
         obfuscated = obfuscate_code(request.code, request.mode, layers_to_apply)
@@ -237,4 +267,4 @@ if os.path.isdir(FRONTEND_DIR):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
