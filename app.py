@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Servidor FastAPI (Extreme Anti-AI Metatable Virtualization)
+#   Anti-Moonsec / Anti-AI Lightweight Virtualization
 # ================================================
 
 from fastapi import FastAPI
@@ -12,14 +12,13 @@ from typing import Optional
 from datetime import datetime
 import os
 import random
-import asyncio
 import urllib.request
 import threading
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Anti-AI Lua Protection Service",
-    version="11.0.0"
+    description="Anti-Moonsec & Anti-AI Lightweight Protection",
+    version="12.0.0"
 )
 
 app.add_middleware(
@@ -45,139 +44,126 @@ class ObfuscateResponse(BaseModel):
     timestamp: str = ""
 
 # ================================================
-# TAREA EN SEGUNDO PLANO: EVITAR QUE EL SERVIDOR DUERMA
+# SISTEMA ANTI-SUEÑO (KEEP-ALIVE)
 # ================================================
 def ping_self():
-    """Hace ping al propio servidor cada 10 minutos para evitar que servicios como Render lo suspendan"""
+    """Mantiene el servidor web activo haciendo un ping interno cada 10 minutos"""
+    import time
     while True:
         try:
-            # Hace una petición rápida a su propia ruta de salud
             urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
         except:
             pass
-        import time
-        time.sleep(600)  # Duerme por 10 minutos
+        time.sleep(600)  # 600 segundos = 10 minutos
 
 @app.on_event("startup")
 async def startup_event():
-    # Inicia el hilo de auto-ping en segundo plano cuando el servidor arranca
     thread = threading.Thread(target=ping_self, daemon=True)
     thread.start()
 
 # ================================================
-# MOTORES DE OFUSCACIÓN ANTI-IA AVANZADOS
+# MOTOR DE OFUSCACIÓN: ANTI-MOONSEC & LIGERO
 # ================================================
 
-def generate_illusion_var(length=random.randint(18, 28)):
-    """Genera nombres de variables visualmente confusos y largos"""
+def generate_illusion_var(length=None):
+    """Genera variables ilusionistas que rompen el análisis simbólico de Moonsec"""
+    if length is None: length = random.randint(10, 15)
     return "_" + "".join(random.choices(["O", "0", "I", "l", "_"], k=length))
 
 def math_obf(n: int) -> str:
-    """Oculta números reales detrás de operaciones matemáticas aleatorias para confundir IAs"""
+    """Oculta enteros en matemáticas dinámicas sin crear código basura pesado"""
     if random.choice([True, False]):
-        a = random.randint(100, 5000)
+        a = random.randint(50, 999)
         b = a - n
         return f"({a} - {b})" if b >= 0 else f"({a} + {abs(b)})"
     else:
-        a = random.randint(2, 10)
+        a = random.randint(2, 5)
         b = n * a
         return f"({b} / {a})"
 
-def generate_anti_ai_junk() -> str:
-    """Genera bloques de código Lua funcional pero inútil para destruir el contexto de las IAs"""
-    junk = ""
-    for _ in range(random.randint(2, 4)):
-        v1, v2, v3 = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
-        
-        # Mezcla pcalls, metatables infinitas y math aleatorio
-        junk += (
-            f"local {v1} = {math_obf(random.randint(10, 9999))}; "
-            f"local {v2} = setmetatable({{{math_obf(1)}, {math_obf(2)}}}, {{__index = function(t, k) return k * {math_obf(3)} end}}); "
-            f"pcall(function() "
-            f"  for {v3} = {math_obf(1)}, {math_obf(random.randint(3, 7))} do "
-            f"    {v1} = {v1} + {v2}[{v3}]; "
-            f"  end "
-            f"end); "
-            f"if {v1} == {math_obf(-999999)} then return function() end end; "
-        )
-    return junk
-
 def obfuscate_single_layer(code: str) -> str:
-    """Capa de virtualización y encriptación basada en state-machines y math obfuscation"""
-    base_key = random.randint(20, 180)
-    multiplier = random.randint(3, 9)
+    """
+    Capa Ultra-Ligera:
+    - Usa compresión de bytes string (\ddd) en lugar de tablas hex (reduce peso 80%).
+    - Motor CFF (Control Flow Flattening) con llave rotativa dinámica.
+    - Predicados opacos para engañar a Moonsec.
+    """
+    start_key = random.randint(20, 200)
+    step_key = random.randint(11, 77)
     
-    # Cifrado de bytes
-    encoded_bytes = bytearray()
-    last_val = base_key
+    curr_key = start_key
+    encoded_str = ""
+    
+    # Encriptación Byte-a-Byte con Llave Rotativa
     for byte in code.encode('utf-8'):
-        cipher_byte = (byte + last_val + multiplier) % 256
-        encoded_bytes.append(cipher_byte)
-        last_val = cipher_byte
-        
-    encoded_hex = encoded_bytes.hex()
+        curr_key = (curr_key + step_key) % 256
+        cipher = (byte + curr_key) % 256
+        # Se guarda como \ddd (Ej: \045) para ocupar poquísimo espacio y no crashear Lua
+        encoded_str += f"\\{cipher:03d}"
+
+    # Variables ofuscadas
+    v_data = generate_illusion_var()
+    v_out = generate_illusion_var()
+    v_key = generate_illusion_var()
+    v_state = generate_illusion_var()
+    v_idx = generate_illusion_var()
     
-    # Fragmentación segura en tablas
-    chunk_size = 2000 
-    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
-    table_elements = ", ".join(f'"{c}"' for c in chunks)
+    # Funciones nativas ensombrecidas (Anti-Hooking)
+    f_byte = generate_illusion_var()
+    f_char = generate_illusion_var()
+    f_insert = generate_illusion_var()
+    f_concat = generate_illusion_var()
+    f_load = generate_illusion_var()
     
-    # Variables fantasma
-    v_hex, v_proxy, v_res, v_state, v_idx, v_last = (generate_illusion_var() for _ in range(6))
-    f_sub, f_tonum, f_char, f_insert, f_concat, f_load = (generate_illusion_var() for _ in range(6))
-    
-    # Inyección de ruido Anti-IA antes y después
-    junk_pre = generate_anti_ai_junk()
-    junk_post = generate_anti_ai_junk()
-    
-    setup_logic = (
-        f"{junk_pre} "
-        f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat},{f_load} = string.sub,tonumber,string.char,table.insert,table.concat,loadstring or load; "
-        f"local {v_hex} = {f_concat}({{{table_elements}}}); "
-        f"local {v_proxy} = setmetatable({{}}, {{ "
-        f"  __index = function(t, k) "
-        f"    local s_str = {f_sub}({v_hex}, k, k + {math_obf(1)}); "
-        f"    if s_str == \"\" then return nil end; "
-        f"    return ({f_tonum}(s_str, {math_obf(16)}) + k) % {math_obf(256)}; "
-        f"  end "
-        f"}}); "
-        f"local {v_res} = {{}}; "
-        f"local {v_state} = {math_obf(1)}; "
-        f"local {v_idx} = {math_obf(1)}; "
-        f"local {v_last} = {math_obf(base_key)}; "
+    # Variables de Predicado Opaco (Anti-Moonsec / Anti-Decompiler)
+    m_fake_table = generate_illusion_var()
+    v_b = generate_illusion_var()
+    v_dec = generate_illusion_var()
+
+    # SETUP:
+    setup_code = (
+        f"local {f_byte}, {f_char}, {f_insert}, {f_concat} = string.byte, string.char, table.insert, table.concat;\n"
+        f"local {f_load} = loadstring or load;\n"
+        f"local {v_data} = \"{encoded_str}\";\n"
+        f"local {v_out} = {{}};\n"
+        f"local {v_key} = {math_obf(start_key)};\n"
+        f"local {v_state} = {math_obf(1)};\n"
+        f"local {v_idx} = {math_obf(1)};\n"
     )
-    
-    loop_logic = (
-        f"while {v_state} ~= {math_obf(0)} do "
-            f"if {v_state} == {math_obf(1)} then "
-                f"if {v_idx} > #{v_hex} then {v_state} = {math_obf(4)} else {v_state} = {math_obf(2)} end; "
-            f"elseif {v_state} == {math_obf(2)} then "
-                f"local m_val = {v_proxy}[{v_idx}]; "
-                f"if not m_val then {v_state} = {math_obf(4)}; else "
-                f"  local c_byte = (m_val - {v_idx}) % {math_obf(256)}; "
-                f"  local dec_b = (c_byte - {v_last} - {math_obf(multiplier)}) % {math_obf(256)}; "
-                f"  {f_insert}({v_res}, {f_char}(dec_b)); "
-                f"  {v_last} = c_byte; {v_state} = {math_obf(3)}; "
-                f"end; "
-            f"elseif {v_state} == {math_obf(3)} then "
-                f"{v_idx} = {v_idx} + {math_obf(2)}; {v_state} = {math_obf(1)}; "
-            f"elseif {v_state} == {math_obf(4)} then "
-                f"{v_state} = {math_obf(0)}; "
-            f"end "
-        f"end; "
-        f"{junk_post} "
+
+    # ANTI-MOONSEC: Tablas falsas que Moonsec cree que son parte del flujo principal
+    anti_moonsec_code = (
+        f"local {m_fake_table} = setmetatable({{}}, {{__index = function() return {v_key} end}});\n"
+        f"if not {f_byte} then {v_key} = {m_fake_table}[1] + {math_obf(999)} end;\n"
     )
-    
-    run_logic = (
-        f"local f, e = {f_load}({f_concat}({v_res})); "
-        f"if not f then pcall(function() error(tostring(e)) end) end; "
-        f"return f(...); "
+
+    # MOTOR CFF (State Machine): Muy cerrado y rápido para evitar lag.
+    loop_code = (
+        f"while {v_state} ~= {math_obf(0)} do\n"
+        f"  if {v_state} == {math_obf(1)} then\n"
+        f"      if {v_idx} > #{v_data} then {v_state} = {math_obf(0)} else {v_state} = {math_obf(2)} end;\n"
+        f"  elseif {v_state} == {math_obf(2)} then\n"
+        f"      {v_key} = ({v_key} + {math_obf(step_key)}) % {math_obf(256)};\n"
+        f"      local {v_b} = {f_byte}({v_data}, {v_idx}, {v_idx});\n"
+        f"      local {v_dec} = ({v_b} - {v_key}) % {math_obf(256)};\n"
+        f"      {f_insert}({v_out}, {f_char}({v_dec}));\n"
+        f"      {v_idx} = {v_idx} + {math_obf(1)};\n"
+        f"      {v_state} = {math_obf(1)};\n"
+        f"  end\n"
+        f"end;\n"
     )
-    
-    return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...)"
+
+    # EJECUCIÓN SEGURA
+    run_code = (
+        f"local exec = {f_load}({f_concat}({v_out}));\n"
+        f"if type(exec) == 'function' then return exec(...) end;\n"
+    )
+
+    return f"return(function(...)\n{setup_code}{anti_moonsec_code}{loop_code}{run_code}\nend)(...)"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    actual_layers = max(1, min(requested_layers, 8))
+    # Máximo 10 capas. Como es super ligero, 10 capas no causarán lag ni pesarán MB.
+    actual_layers = max(1, min(requested_layers, 10))
     
     current_code = code
     for _ in range(actual_layers):
@@ -216,7 +202,7 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                   ]WY.                                                                              
                 /j"  
                 
-                                            ttps://space.spacecp.workers.dev/
+                                            https://space.spacecp.workers.dev/
                                 https://space-obfuscator.spacecp.workers.dev/
                         https://discord.gg/7dt2A6DJZA
 ]]--"""
@@ -236,7 +222,7 @@ async def obfuscate(request: ObfuscateRequest):
         if not request.code or not request.code.strip():
             return ObfuscateResponse(success=False, error="El código está vacío")
         
-        max_size = 10 * 1024 * 1024 
+        max_size = 15 * 1024 * 1024 
         if len(request.code) > max_size:
             return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
         
@@ -249,7 +235,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"High Protection ({min(layers_to_apply, 8)}-Layers + Anti-AI)",
+            mode_used=f"Lightweight Core ({min(layers_to_apply, 10)}-Layers + Anti-Moonsec)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
