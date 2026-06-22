@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Anti-Moonsec & Anti-AI Lightweight Virtualization (No-Lag Edition)
+#   Anti-Moonsec & Anti-AI Lightweight Virtualization (One-Line Execution)
 # ================================================
 
 from fastapi import FastAPI
@@ -17,8 +17,8 @@ import threading
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Anti-Moonsec & Anti-AI Protection with Editor Lag Fix",
-    version="12.1.0"
+    description="Anti-Moonsec & Anti-AI Protection (Single Line Output)",
+    version="13.0.0"
 )
 
 app.add_middleware(
@@ -62,7 +62,7 @@ async def startup_event():
     thread.start()
 
 # ================================================
-# MOTOR DE OFUSCACIÓN: LIGERO, ANTI-MOONSEC Y SIN LAG
+# MOTOR DE OFUSCACIÓN: 100% SINGLE-LINE (Sin errores en multicapas)
 # ================================================
 
 def generate_illusion_var(length=None):
@@ -73,17 +73,17 @@ def math_obf(n: int) -> str:
     if random.choice([True, False]):
         a = random.randint(50, 999)
         b = a - n
-        return f"({a} - {b})" if b >= 0 else f"({a} + {abs(b)})"
+        return f"({a}-{b})" if b >= 0 else f"({a}+{abs(b)})"
     else:
         a = random.randint(2, 5)
         b = n * a
-        return f"({b} / {a})"
+        return f"({b}/{a})"
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Capa Ultra-Ligera con Fix de Rendimiento de Editor:
-    - Fragmenta la cadena de bytes en múltiples líneas cortas (Evita congelamiento del editor).
-    - Mantiene el motor CFF Anti-Moonsec y Anti-AI intacto.
+    Capa Ultra-Ligera en una SOLA LÍNEA:
+    - Removidos los saltos de línea y operadores de concatenación.
+    - Evita errores sintácticos al aplicar 10 capas seguidas.
     """
     start_key = random.randint(20, 200)
     step_key = random.randint(11, 77)
@@ -96,14 +96,6 @@ def obfuscate_single_layer(code: str) -> str:
         curr_key = (curr_key + step_key) % 256
         cipher = (byte + curr_key) % 256
         encoded_str += f"\\{cipher:03d}"
-
-    # ========================================================
-    # SOLUCIÓN CRÍTICA: FRAGMENTACIÓN PARA EVITAR LAG EN EL EDITOR
-    # Dividimos la cadena masiva cada 120 caracteres y la unimos con ' ..\n"'
-    # ========================================================
-    line_length = 120
-    chunks = [encoded_str[i:i+line_length] for i in range(0, len(encoded_str), line_length)]
-    lua_string_block = '" ..\n"'.join(chunks)
 
     # Variables ofuscadas
     v_data = generate_illusion_var()
@@ -119,51 +111,49 @@ def obfuscate_single_layer(code: str) -> str:
     f_concat = generate_illusion_var()
     f_load = generate_illusion_var()
     
-    # Control de predicado opaco (Anti-Decompiler)
+    # Control de predicado opaco
     m_fake_table = generate_illusion_var()
     v_b = generate_illusion_var()
     v_dec = generate_illusion_var()
 
-    # SETUP (Aquí se inyecta el bloque multi-línea de forma segura)
+    # TÓDO en una sola línea continua, unida por punto y coma (;)
     setup_code = (
-        f"local {f_byte}, {f_char}, {f_insert}, {f_concat} = string.byte, string.char, table.insert, table.concat;\n"
-        f"local {f_load} = loadstring or load;\n"
-        f"local {v_data} = \"{lua_string_block}\";\n"
-        f"local {v_out} = {{}};\n"
-        f"local {v_key} = {math_obf(start_key)};\n"
-        f"local {v_state} = {math_obf(1)};\n"
-        f"local {v_idx} = {math_obf(1)};\n"
+        f"local {f_byte},{f_char},{f_insert},{f_concat}=string.byte,string.char,table.insert,table.concat;"
+        f"local {f_load}=loadstring or load;"
+        f"local {v_data}=\"{encoded_str}\";"
+        f"local {v_out}={{}};"
+        f"local {v_key}={math_obf(start_key)};"
+        f"local {v_state}={math_obf(1)};"
+        f"local {v_idx}={math_obf(1)};"
     )
 
-    # ANTI-MOONSEC LÓGICA FALSA
     anti_moonsec_code = (
-        f"local {m_fake_table} = setmetatable({{}}, {{__index = function() return {v_key} end}});\n"
-        f"if not {f_byte} then {v_key} = {m_fake_table}[1] + {math_obf(999)} end;\n"
+        f"local {m_fake_table}=setmetatable({{}},{{__index=function()return {v_key} end}});"
+        f"if not {f_byte} then {v_key}={m_fake_table}[1]+{math_obf(999)} end;"
     )
 
-    # MOTOR MÁQUINA DE ESTADOS (CFF)
     loop_code = (
-        f"while {v_state} ~= {math_obf(0)} do\n"
-        f"  if {v_state} == {math_obf(1)} then\n"
-        f"      if {v_idx} > #{v_data} then {v_state} = {math_obf(0)} else {v_state} = {math_obf(2)} end;\n"
-        f"  elseif {v_state} == {math_obf(2)} then\n"
-        f"      {v_key} = ({v_key} + {math_obf(step_key)}) % {math_obf(256)};\n"
-        f"      local {v_b} = {f_byte}({v_data}, {v_idx}, {v_idx});\n"
-        f"      local {v_dec} = ({v_b} - {v_key}) % {math_obf(256)};\n"
-        f"      {f_insert}({v_out}, {f_char}({v_dec}));\n"
-        f"      {v_idx} = {v_idx} + {math_obf(1)};\n"
-        f"      {v_state} = {math_obf(1)};\n"
-        f"  end\n"
-        f"end;\n"
+        f"while {v_state}~={math_obf(0)} do "
+        f"if {v_state}=={math_obf(1)} then "
+        f"if {v_idx}>#{v_data} then {v_state}={math_obf(0)} else {v_state}={math_obf(2)} end;"
+        f"elseif {v_state}=={math_obf(2)} then "
+        f"{v_key}=({v_key}+{math_obf(step_key)})%{math_obf(256)};"
+        f"local {v_b}={f_byte}({v_data},{v_idx},{v_idx});"
+        f"local {v_dec}=({v_b}-{v_key})%{math_obf(256)};"
+        f"{f_insert}({v_out},{f_char}({v_dec}));"
+        f"{v_idx}={v_idx}+{math_obf(1)};"
+        f"{v_state}={math_obf(1)};"
+        f"end "
+        f"end;"
     )
 
-    # EJECUCIÓN DINÁMICA
     run_code = (
-        f"local exec = {f_load}({f_concat}({v_out}));\n"
-        f"if type(exec) == 'function' then return exec(...) end;\n"
+        f"local exec={f_load}({f_concat}({v_out}));"
+        f"if type(exec)=='function' then return exec(...) end;"
     )
 
-    return f"return(function(...)\n{setup_code}{anti_moonsec_code}{loop_code}{run_code}\nend)(...)"
+    # Retorna absolutamente todo comprimido en una sola línea ejecutable
+    return f"return(function(...) {setup_code}{anti_moonsec_code}{loop_code}{run_code} end)(...);"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
     actual_layers = max(1, min(requested_layers, 10))
@@ -209,7 +199,8 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                 https://space-obfuscator.spacecp.workers.dev/
                         https://discord.gg/7dt2A6DJZA
 ]]--"""
-    return f"{banner}\n{current_code}\n"
+    # Se concatena el banner visible, seguido por 1 sola línea de código
+    return f"{banner}\n{current_code}"
 
 @app.get("/")
 async def root():
@@ -238,7 +229,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Optimized Core ({min(layers_to_apply, 10)}-Layers + Anti-Lag)",
+            mode_used=f"Optimized Core ({min(layers_to_apply, 10)}-Layers + Single-Line)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
