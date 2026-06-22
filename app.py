@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Anti-Moonsec / Anti-AI Lightweight Virtualization
+#   Anti-Moonsec & Anti-AI Lightweight Virtualization (No-Lag Edition)
 # ================================================
 
 from fastapi import FastAPI
@@ -17,8 +17,8 @@ import threading
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Anti-Moonsec & Anti-AI Lightweight Protection",
-    version="12.0.0"
+    description="Anti-Moonsec & Anti-AI Protection with Editor Lag Fix",
+    version="12.1.0"
 )
 
 app.add_middleware(
@@ -54,7 +54,7 @@ def ping_self():
             urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
         except:
             pass
-        time.sleep(600)  # 600 segundos = 10 minutos
+        time.sleep(600)
 
 @app.on_event("startup")
 async def startup_event():
@@ -62,16 +62,14 @@ async def startup_event():
     thread.start()
 
 # ================================================
-# MOTOR DE OFUSCACIÓN: ANTI-MOONSEC & LIGERO
+# MOTOR DE OFUSCACIÓN: LIGERO, ANTI-MOONSEC Y SIN LAG
 # ================================================
 
 def generate_illusion_var(length=None):
-    """Genera variables ilusionistas que rompen el análisis simbólico de Moonsec"""
     if length is None: length = random.randint(10, 15)
     return "_" + "".join(random.choices(["O", "0", "I", "l", "_"], k=length))
 
 def math_obf(n: int) -> str:
-    """Oculta enteros en matemáticas dinámicas sin crear código basura pesado"""
     if random.choice([True, False]):
         a = random.randint(50, 999)
         b = a - n
@@ -83,10 +81,9 @@ def math_obf(n: int) -> str:
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Capa Ultra-Ligera:
-    - Usa compresión de bytes string (\ddd) en lugar de tablas hex (reduce peso 80%).
-    - Motor CFF (Control Flow Flattening) con llave rotativa dinámica.
-    - Predicados opacos para engañar a Moonsec.
+    Capa Ultra-Ligera con Fix de Rendimiento de Editor:
+    - Fragmenta la cadena de bytes en múltiples líneas cortas (Evita congelamiento del editor).
+    - Mantiene el motor CFF Anti-Moonsec y Anti-AI intacto.
     """
     start_key = random.randint(20, 200)
     step_key = random.randint(11, 77)
@@ -94,12 +91,19 @@ def obfuscate_single_layer(code: str) -> str:
     curr_key = start_key
     encoded_str = ""
     
-    # Encriptación Byte-a-Byte con Llave Rotativa
+    # Encriptación Byte-a-Byte
     for byte in code.encode('utf-8'):
         curr_key = (curr_key + step_key) % 256
         cipher = (byte + curr_key) % 256
-        # Se guarda como \ddd (Ej: \045) para ocupar poquísimo espacio y no crashear Lua
         encoded_str += f"\\{cipher:03d}"
+
+    # ========================================================
+    # SOLUCIÓN CRÍTICA: FRAGMENTACIÓN PARA EVITAR LAG EN EL EDITOR
+    # Dividimos la cadena masiva cada 120 caracteres y la unimos con ' ..\n"'
+    # ========================================================
+    line_length = 120
+    chunks = [encoded_str[i:i+line_length] for i in range(0, len(encoded_str), line_length)]
+    lua_string_block = '" ..\n"'.join(chunks)
 
     # Variables ofuscadas
     v_data = generate_illusion_var()
@@ -108,36 +112,36 @@ def obfuscate_single_layer(code: str) -> str:
     v_state = generate_illusion_var()
     v_idx = generate_illusion_var()
     
-    # Funciones nativas ensombrecidas (Anti-Hooking)
+    # Funciones nativas ensombrecidas
     f_byte = generate_illusion_var()
     f_char = generate_illusion_var()
     f_insert = generate_illusion_var()
     f_concat = generate_illusion_var()
     f_load = generate_illusion_var()
     
-    # Variables de Predicado Opaco (Anti-Moonsec / Anti-Decompiler)
+    # Control de predicado opaco (Anti-Decompiler)
     m_fake_table = generate_illusion_var()
     v_b = generate_illusion_var()
     v_dec = generate_illusion_var()
 
-    # SETUP:
+    # SETUP (Aquí se inyecta el bloque multi-línea de forma segura)
     setup_code = (
         f"local {f_byte}, {f_char}, {f_insert}, {f_concat} = string.byte, string.char, table.insert, table.concat;\n"
         f"local {f_load} = loadstring or load;\n"
-        f"local {v_data} = \"{encoded_str}\";\n"
+        f"local {v_data} = \"{lua_string_block}\";\n"
         f"local {v_out} = {{}};\n"
         f"local {v_key} = {math_obf(start_key)};\n"
         f"local {v_state} = {math_obf(1)};\n"
         f"local {v_idx} = {math_obf(1)};\n"
     )
 
-    # ANTI-MOONSEC: Tablas falsas que Moonsec cree que son parte del flujo principal
+    # ANTI-MOONSEC LÓGICA FALSA
     anti_moonsec_code = (
         f"local {m_fake_table} = setmetatable({{}}, {{__index = function() return {v_key} end}});\n"
         f"if not {f_byte} then {v_key} = {m_fake_table}[1] + {math_obf(999)} end;\n"
     )
 
-    # MOTOR CFF (State Machine): Muy cerrado y rápido para evitar lag.
+    # MOTOR MÁQUINA DE ESTADOS (CFF)
     loop_code = (
         f"while {v_state} ~= {math_obf(0)} do\n"
         f"  if {v_state} == {math_obf(1)} then\n"
@@ -153,7 +157,7 @@ def obfuscate_single_layer(code: str) -> str:
         f"end;\n"
     )
 
-    # EJECUCIÓN SEGURA
+    # EJECUCIÓN DINÁMICA
     run_code = (
         f"local exec = {f_load}({f_concat}({v_out}));\n"
         f"if type(exec) == 'function' then return exec(...) end;\n"
@@ -162,7 +166,6 @@ def obfuscate_single_layer(code: str) -> str:
     return f"return(function(...)\n{setup_code}{anti_moonsec_code}{loop_code}{run_code}\nend)(...)"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    # Máximo 10 capas. Como es super ligero, 10 capas no causarán lag ni pesarán MB.
     actual_layers = max(1, min(requested_layers, 10))
     
     current_code = code
@@ -235,7 +238,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Lightweight Core ({min(layers_to_apply, 10)}-Layers + Anti-Moonsec)",
+            mode_used=f"Optimized Core ({min(layers_to_apply, 10)}-Layers + Anti-Lag)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
