@@ -1,5 +1,5 @@
 # ================================================
-#   SPACE OBFUSCATOR - Backend Server
+#   SPACE OBFUSCATOR - Backend Server (Optimized)
 #   Servidor FastAPI (Anti-AI Metatable Virtualization)
 # ================================================
 
@@ -16,7 +16,7 @@ import random
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Anti-AI Lua Protection Service",
-    version="10.0.0"
+    version="10.1.0"
 )
 
 app.add_middleware(
@@ -42,17 +42,11 @@ class ObfuscateResponse(BaseModel):
     timestamp: str = ""
 
 def generate_illusion_var(length=14):
-    """Genera nombres extremadamente extensos, confusos y repetitivos para saturar el contexto de la IA"""
     chars = "O0I1"
     return "_" + "".join(random.choice(chars) for _ in range(length))
 
 def generate_anti_ai_junk() -> str:
-    """
-    Genera bloques controlados de código basura con sombreado de variables.
-    Mantiene un balance óptimo entre peso final del archivo y alta confusión para LLMs.
-    """
     junk = ""
-    # Genera de 1 a 2 estructuras ficticias para evitar sobrecargar la memoria de Lua
     for _ in range(random.randint(1, 2)):
         v1 = generate_illusion_var(12)
         v2 = generate_illusion_var(12)
@@ -76,13 +70,12 @@ def generate_anti_ai_junk() -> str:
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Aplica una capa de ofuscación utilizando virtualización de lectura mediante 
-    metatablas interconectadas y operaciones criptográficas dinámicas.
+    Aplica una capa de ofuscación utilizando virtualización por tabla balanceada.
+    Optimizado para evitar el desbordamiento de constantes en scripts gigantes.
     """
     base_key = random.randint(20, 180)
     multiplier = random.randint(3, 9)
     
-    # Cifrado en flujo encadenado
     encoded_bytes = []
     last_val = base_key
     for byte in code.encode('utf-8'):
@@ -91,14 +84,17 @@ def obfuscate_single_layer(code: str) -> str:
         last_val = cipher_byte
         
     encoded_hex = "".join(f"{b:02x}" for b in encoded_bytes)
-    chunk_size = 3000 
-    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
-    super_string = ' .. '.join(f'"{c}"' for c in chunks)
     
-    # Identificadores altamente confusos
+    # Fragmentación segura usando inicialización de tablas indexadas (Evita sobrecargar la pila de Lua)
+    chunk_size = 2000 
+    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
+    
+    # En lugar de "chunk" .. "chunk" .. "chunk", creamos fragmentos limpios en una matriz interna
+    table_elements = ", ".join(f'"{c}"' for c in chunks)
+    
     v_hex = generate_illusion_var()
     v_proxy = generate_illusion_var()
-    v_res = generate_illusion_var()  # Corregido a minúsculas completo
+    v_res = generate_illusion_var()  
     v_state = generate_illusion_var()
     v_idx = generate_illusion_var()
     v_last = generate_illusion_var()
@@ -110,15 +106,14 @@ def obfuscate_single_layer(code: str) -> str:
     f_concat = generate_illusion_var()
     f_load = generate_illusion_var()
     
-    # Inyección balanceada de código basura
     junk_pre = generate_anti_ai_junk()
     junk_post = generate_anti_ai_junk()
     
-    # Lógica con Metatabla Proxy
+    # Modificado: v_hex ahora reconstruye la cadena gigante vía table.concat interna al iniciar la capa
     setup_logic = (
         f"{junk_pre} "
-        f"local {v_hex} = {super_string}; "
         f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat},{f_load} = string.sub,tonumber,string.char,table.insert,table.concat,loadstring or load; "
+        f"local {v_hex} = {f_concat}({{{table_elements}}}); "
         f"local {v_proxy} = setmetatable({{}}, {{ "
         f"  __index = function(t, k) "
         f"    local s_str = {f_sub}({v_hex}, k, k + 1); "
@@ -132,7 +127,6 @@ def obfuscate_single_layer(code: str) -> str:
         f"local {v_last} = {base_key}; "
     )
     
-    # Bucle de Control Desaplanado (Control Flow Flattening)
     loop_logic = (
         f"while {v_state} ~= 0 do "
             f"if {v_state} == 1 then "
@@ -163,20 +157,13 @@ def obfuscate_single_layer(code: str) -> str:
     return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...)"
 
 def obfuscate_code(code: str, mode: str, layers: int) -> str:
-    """
-    Fuerza el sistema a procesar el script exactamente 5 veces fijas.
-    Garantiza la máxima protección matemática balanceando la carga final del script.
-    """
     actual_layers = 5
-    
     current_code = code
     for _ in range(actual_layers):
         current_code = obfuscate_single_layer(current_code)
         
     banner = """--[[
-
-
-                                                                  <\'         -n:                   
+                                                                  <'         -n:                   
                                                                icI        ^v0!                      
                                                              C?         d%<                         
                                                           _O^       IQBQ'                           
@@ -193,15 +180,15 @@ def obfuscate_code(code: str, mode: str, layers: int) -> str:
                                                  _$$@W~     `0WL!      _@$$$$@L                     
                                                 :&@c      ,{'         .k@$$@J                       
                                           :l   I%X.                  !&$$$X'                        
-                                       .\l    u$Yic]  `>           >#$@B\                           
+                                       .\\l    u$Yic]  `>           >#$@B\\                           
                                      ;L~    -%$$$$U;|+          'zB$@pi                             
                                    ^aj    |8@$$$$$B]         .J%$@*i                                
                                  `a$f':(B$$$$$$$@c       '+a@B*r.                                   
                                 c$$$$$$$@Bz>/$$k"     ~cXt-^                                        
                               ~%$@$$$$B/'  IB%l                                                     
-                             w$$$$@BJ'    _%\                                                       
+                             w$$$$@BJ'    _%\\                                                       
                            ~B$$$@a<      Un.                                                        
-                         'a$$$@\       :p.                                                          
+                         'a$$$@\\       :p.                                                          
                         n@$@p"       "x                                                             
                       )8@#?                                                                         
                     iB@r.                                                                           
@@ -210,9 +197,7 @@ def obfuscate_code(code: str, mode: str, layers: int) -> str:
                 
                                                                                                
                                             https://discord.gg/7dt2A6DJZA
-                                            https://space.spacecp.workers.dev
 ]]--"""
-
     return f"{banner}\n{current_code}\n"
 
 @app.get("/")
@@ -229,7 +214,6 @@ async def obfuscate(request: ObfuscateRequest):
         if not request.code or not request.code.strip():
             return ObfuscateResponse(success=False, error="El código está vacío")
         
-        # Incrementado a 10MB preventivo por el crecimiento exponencial de las 5 capas
         max_size = 10 * 1024 * 1024 
         if len(request.code) > max_size:
             return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
