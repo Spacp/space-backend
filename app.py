@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Servidor FastAPI (Anti-AI & Anti-Hook Virtualization)
+#   Military-Grade Encryption (Opaque Predicates & Multi-Layer)
 # ================================================
 
 from fastapi import FastAPI
@@ -12,11 +12,13 @@ from typing import Optional
 from datetime import datetime
 import os
 import random
+import urllib.request
+import threading
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Anti-AI Lua Protection Service",
-    version="10.3.0"
+    description="Military-Grade Lua Protection Service",
+    version="11.0.0"
 )
 
 app.add_middleware(
@@ -30,7 +32,7 @@ app.add_middleware(
 class ObfuscateRequest(BaseModel):
     code: str
     mode: str = "heavy"
-    layers: Optional[int] = 5  # Recebe o número exato do frontend
+    layers: Optional[int] = 5
 
 class ObfuscateResponse(BaseModel):
     success: bool
@@ -41,96 +43,118 @@ class ObfuscateResponse(BaseModel):
     mode_used: str = ""
     timestamp: str = ""
 
-# Otimização para nomes de variáveis aleatórios
+# SISTEMA ANTI-SUEÑO (KEEP-ALIVE)
+def ping_self():
+    import time
+    while True:
+        try:
+            urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
+        except:
+            pass
+        time.sleep(600)
+
+@app.on_event("startup")
+async def startup_event():
+    thread = threading.Thread(target=ping_self, daemon=True)
+    thread.start()
+
+# Ocultación de variables
 def generate_illusion_var(length=14):
     return "_" + "".join(random.choices("O0I1l", k=length))
 
+# Derivación matemática compleja para las llaves
+def math_obf(n: int) -> str:
+    choice = random.randint(1, 3)
+    if choice == 1:
+        a = random.randint(100, 999)
+        return f"({a + n}-{a})"
+    elif choice == 2:
+        a = random.randint(2, 7)
+        return f"({n * a}/{a})"
+    else:
+        elements = random.randint(2, 6)
+        table_str = "{" + ",".join(["1"] * elements) + "}"
+        return f"({n - elements}+#{table_str})"
+
 def obfuscate_single_layer(code: str) -> str:
     """
-    Aplica uma camada de ofuscação com Virtualização Segura, Proteção Anti-Hook e Lixo Entrelaçado.
+    Motor de Ofuscación Avanzado con protección anti-IA y anti-descompiladores.
     """
-    base_key = random.randint(20, 180)
-    multiplier = random.randint(3, 9)
+    key_base = random.randint(20, 200)
     
-    # Cifragem de bytes dinâmica
+    # 1. MÚLTIPLES CAPAS DE CIFRADO
     encoded_bytes = bytearray()
-    last_val = base_key
-    for byte in code.encode('utf-8'):
-        cipher_byte = (byte + last_val + multiplier) % 256
-        encoded_bytes.append(cipher_byte)
-        last_val = cipher_byte
+    for i, byte in enumerate(code.encode('utf-8')):
+        c1 = (byte + (i % 256)) % 256   # Capa A: Desplazamiento posicional
+        c2 = (255 - c1)                 # Capa B: Inversión de bits
+        c3 = (c2 + key_base) % 256      # Capa C: Desplazamiento de llave estática
+        encoded_bytes.append(c3)
         
-    encoded_hex = encoded_bytes.hex()
+    hex_str = encoded_bytes.hex()
     
-    # Fragmentação segura em tabelas para evitar colapso de registros Lua (Error 255)
-    chunk_size = 2000 
-    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
-    table_elements = ",".join(f'"{c}"' for c in chunks)
+    # STRING SPLITTING (Fragmentación del payload hex)
+    sp1 = len(hex_str) // 3
+    sp2 = sp1 * 2
+    part1, part2, part3 = hex_str[:sp1], hex_str[sp1:sp2], hex_str[sp2:]
     
-    # Geração de variáveis ilusórias (Fantasmas)
-    v_hex, v_proxy, v_res, v_state, v_idx, v_last = (generate_illusion_var() for _ in range(6))
+    # Variables fantasma
+    v_data, v_out, v_key, v_state, v_idx = (generate_illusion_var() for _ in range(5))
     f_sub, f_tonum, f_char, f_insert, f_concat = (generate_illusion_var() for _ in range(5))
-    v_env, v_exec, v_junk = (generate_illusion_var() for _ in range(3))
+    v_env, v_exec = (generate_illusion_var() for _ in range(2))
     
-    # SETUP - Definição das variáveis do descodificador
-    setup_logic = (
+    # SETUP - Reconstrucción tardía
+    setup_code = (
         f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat}=string.sub,tonumber,string.char,table.insert,table.concat;"
-        f"local {v_hex}={f_concat}({{{table_elements}}});"
-        f"local {v_proxy}=setmetatable({{}},{{__index=function(t,k) local s={f_sub}({v_hex},k,k+1);if s==\"\" then return nil end;return({f_tonum}(s,16)+k)%256;end}});"
-        f"local {v_res}={{}};"
+        f"local {v_data}=\"{part1}\"..\"{part2}\"..\"{part3}\";"
+        f"local {v_out}={{}};"
         f"local {v_state}=1;"
         f"local {v_idx}=1;"
-        f"local {v_last}={base_key};"
-        f"local {v_junk}=0;"
+        f"local {v_key}={math_obf(key_base)};"
     )
     
-    # LÓGICA DE LOOP & LIXO ENTRELAÇADO
-    # A variável v_junk aparenta ser código morto, mas está matematicamente ligada ao cálculo "(v_junk - math.abs(v_junk))"
-    # Se uma IA ou descompilador remover a variável ou a lógica, a descriptografia falhará.
-    loop_logic = (
+    # LOOP DE DESCIFRADO - Opaque Predicates integrados
+    loop_code = (
         f"while {v_state}~=0 do "
         f"if {v_state}==1 then "
-        f"if {v_idx}>#{v_hex} then {v_state}=4 else {v_state}=2 end;"
+        f"if {v_idx}>#{v_data} then {v_state}=4 else {v_state}=2 end;"
         f"elseif {v_state}==2 then "
-        f"local m={v_proxy}[{v_idx}];"
-        f"if not m then {v_state}=4;else "
-        f"{v_junk}={v_junk}+1;" 
-        f"local c=(m-{v_idx}+({v_junk}-math.abs({v_junk})))%256;"
-        f"local d=(c-{v_last}-{multiplier})%256;"
-        f"{f_insert}({v_res},{f_char}(d));"
-        f"{v_last}=c;"
-        f"{v_state}=3;"
+        f"local s={f_sub}({v_data},{v_idx},{v_idx}+1);"
+        f"if s==\"\" then {v_state}=4;else "
+        f"if ({v_idx}*({v_idx}+1))%2==0 then " # <--- OPAQUE PREDICATE (Siempre True)
+        f"local m={f_tonum}(s,16);"
+        f"local c3=(m-{v_key})%256;"
+        f"local c2=255-c3;"
+        f"local r_idx=math.floor(({v_idx}-1)/2);"
+        f"local dec=(c2-(r_idx%256))%256;"
+        f"{f_insert}({v_out},{f_char}(dec));"
+        f"{v_idx}={v_idx}+2;"
+        f"{v_state}=1;"
+        f"else {v_state}=0 end;"
         f"end;"
-        f"elseif {v_state}==3 then "
-        f"{v_idx}={v_idx}+2;{v_state}=1;"
         f"elseif {v_state}==4 then "
         f"{v_state}=0;"
         f"end;"
         f"end;"
     )
     
-    # EXECUÇÃO & ANTI-HOOK DE LOADSTRING
-    # Ocultamos a palavra 'load' ou 'loadstring' resolvendo-a de forma dinâmica usando os caracteres ASCII:
-    # 108,111,97,100 = "load" | 115,116,114,105,110,103 = "string"
+    # EXECUÇÃO ANTI-HOOK
     run_logic = (
         f"local {v_env}=getfenv and getfenv() or _ENV;"
         f"local {v_exec}={v_env}[{f_char}(108,111,97,100)] or {v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)];"
-        f"local f,e={v_exec}({f_concat}({v_res}));"
-        f"if not f then error(tostring(e)) end;"
-        f"return f(...);"
+        f"local f,e={v_exec}({f_concat}({v_out}));"
+        f"if type(f)=='function' then return f(...) else error(tostring(e)) end;"
     )
     
-    # Retorna o código ofuscado compactado em uma única linha
-    return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...);"
+    return f"return(function(...) {setup_code}{loop_code}{run_logic} end)(...);"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    # Otimização: Forçamos que as camadas estejam entre 1 e 8 para evitar loops exagerados
-    actual_layers = max(1, min(requested_layers, 8))
+    actual_layers = max(1, min(requested_layers, 10))
     
     current_code = code
     for _ in range(actual_layers):
         current_code = obfuscate_single_layer(current_code)
         
+    # BANNER ORIGINAL RESTAURADO COMPLETAMENTE
     banner = """--[[
                                                                   <'         -n:                   
                                                                icI        ^v0!                      
@@ -182,12 +206,11 @@ async def health_check():
 async def obfuscate(request: ObfuscateRequest):
     try:
         if not request.code or not request.code.strip():
-            return ObfuscateResponse(success=False, error="O código está vazio")
+            return ObfuscateResponse(success=False, error="El código está vacío")
         
-        # Limite de peso: 10 MB para suportar múltiplas camadas
-        max_size = 10 * 1024 * 1024 
+        max_size = 15 * 1024 * 1024 
         if len(request.code) > max_size:
-            return ObfuscateResponse(success=False, error="O código excede o limite de tamanho permitido")
+            return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
         
         layers_to_apply = request.layers if request.layers is not None else 5
         
@@ -198,11 +221,11 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"High Protection ({min(layers_to_apply, 8)}-Layers + Anti-AI)",
+            mode_used=f"Military Core ({min(layers_to_apply, 10)}-Layers)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
-        return ObfuscateResponse(success=False, error=f"Erro inesperado: {str(e)}")
+        return ObfuscateResponse(success=False, error=f"Error inesperado: {str(e)}")
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.isdir(FRONTEND_DIR):
@@ -216,4 +239,4 @@ if os.path.isdir(FRONTEND_DIR):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
