@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Military-Grade Polimorphic Engine v6 (CTF Unbreakable)
+#   Military-Grade Polimorphic Engine v7 (CTF Unbreakable)
 # ================================================
 
 from fastapi import FastAPI
@@ -18,7 +18,7 @@ import threading
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Military-Grade Lua Protection Service",
-    version="16.0.0"
+    version="17.0.0"
 )
 
 app.add_middleware(
@@ -58,11 +58,11 @@ async def startup_event():
     thread.start()
 
 def generate_illusion_var():
-    # Longitudes erráticas para romper patrones visuales
-    length = random.randint(5, 25)
+    # Nombres erráticos para romper la visual
+    length = random.randint(8, 26)
     return "_" + "".join(random.choices("O0I1l", k=length))
 
-# PRNG Multi-Estado (Python Simulator)
+# PRNG Multi-Estado Exacto para replicar en Lua
 class MultiStatePRNG:
     def __init__(self, s1, s2, s3):
         self.s1 = s1
@@ -78,68 +78,92 @@ class MultiStatePRNG:
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Motor v6 Supremo (Derrota de Análisis Estático/Dinámico):
-    - Padding Dinámico para payloads cortos.
-    - PRNG Multi-Estado.
-    - Cifrado en cadenas escapadas nativas (\\ddd).
-    - Múltiples trampas anti-emulación y corrupción silenciosa.
+    Motor v7: 
+    - Semillas Dinámicas por Checksum Ambiental.
+    - Timing Checks Totales.
+    - Padding Lua Válido.
+    - Payload Splitting Caótico.
     """
-    # 1. PADDING DE PAYLOAD (Evita ataques a scripts cortos)
-    pad_len = random.randint(50, 150)
-    padding = "--" + "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=pad_len)) + "\n"
-    code = padding + code
+    # 1. PADDING LÓGICO INOFENSIVO (Anti-Reconocimiento)
+    fake_code = ""
+    for _ in range(random.randint(3, 7)):
+        v = generate_illusion_var()
+        n = random.randint(10, 99)
+        fake_code += f"local {v}=type({n})=='number' and {n*2} or 0;"
+    code = fake_code + "\n" + code
 
-    # 2. SEMILLAS MULTI-ESTADO
-    s1 = random.randint(100000, 999999)
-    s2 = random.randint(100000, 999999)
-    s3 = random.randint(100000, 999999)
-    prng = MultiStatePRNG(s1, s2, s3)
+    # 2. GENERACIÓN DE SEMILLAS
+    s1_target = random.randint(100000, 999999)
+    s2_target = random.randint(100000, 999999)
+    s3_target = random.randint(100000, 999999)
     
-    # 3. ENCRIPTACIÓN ESCAPADA (Evita tablas HEX legibles)
+    # La suma ASCII de las 5 funciones ["pairs","ipairs","tostring","pcall","type"] es exactamente 3015
+    base_sum = 3015 
+    
+    def calc_derivation(target):
+        m = random.randint(10, 150)
+        o = target - (base_sum * m)
+        op = "+" if o >= 0 else "-"
+        return f"(_sum*{m}{op}{abs(o)})%4294967296"
+
+    prng = MultiStatePRNG(s1_target, s2_target, s3_target)
+    
+    # 3. ENCRIPTACIÓN ESCAPADA
     enc_str = ""
     for byte in code.encode('utf-8'):
         sh = prng.next()
         c = (byte + sh) % 256
         enc_str += f"\\{c:03d}"
         
-    # 4. FRAGMENTACIÓN DE STRINGS (String Splitting)
-    # Partimos la mega cadena en fragmentos aleatorios para ensamblarla en Lua
-    chunk_size = random.randint(2000, 4000)
-    chunks = [enc_str[i:i+chunk_size] for i in range(0, len(enc_str), chunk_size)]
+    # 4. FRAGMENTACIÓN CAÓTICA DEL PAYLOAD
+    # Se divide el payload en 4 fragmentos
+    q = len(enc_str) // 4
+    parts = [enc_str[0:q], enc_str[q:q*2], enc_str[q*2:q*3], enc_str[q*3:]]
     
-    v_chunks = [generate_illusion_var() for _ in chunks]
-    chunk_declarations = "".join([f"local {v}=\"{c}\";" for v, c in zip(v_chunks, chunks)])
-    payload_concat = "local " + generate_illusion_var() + "=" + "..".join(v_chunks) + ";"
-    v_data = payload_concat.split("=")[0].replace("local ", "")
+    v_parts = [generate_illusion_var() for _ in range(4)]
     
-    # Variables Opacas
+    # Declaramos los fragmentos en orden normal
+    chunk_declarations = "".join([f"local {v}=\"{p}\";" for v, p in zip(v_parts, parts)])
+    
+    # Lua los une usando sus variables, nosotros decidimos el orden (que en este caso es 1,2,3,4 pero ofuscado)
+    v_data = generate_illusion_var()
+    payload_concat = f"local {v_data}={v_parts[0]}..{v_parts[1]}..{v_parts[2]}..{v_parts[3]};"
+
+    # Variables de Entorno y Lógica
     v_s1, v_s2, v_s3 = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
     v_env, v_idx, v_time = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
     v_reader, v_ok, v_res = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
     
-    # SETUP LUA & ANTI-DEBUG GLOBAL
-    # Se validan globales silenciosamente. Si alguien modificó el entorno, s2 se corrompe.
+    # CONSTRUCCIÓN DE STRINGS GLOBALES OFUSCADOS (pairs, ipairs, tostring, pcall, type)
+    str_pairs = "string.char(112,97,105,114,115)"
+    str_ipairs = "string.char(105,112,97,105,114,115)"
+    str_tostring = "string.char(116,111,115,116,114,105,110,103)"
+    str_pcall = "string.char(112,99,97,108,108)"
+    str_type = "string.char(116,121,112,101)"
+
+    # SETUP LUA: CÁLCULO DE CHECKSUM DEL ENTORNO (Da 3015 si no ha sido hookeado)
     setup_code = (
         f"local {v_env}=getfenv and getfenv() or _ENV;"
-        f"local {v_s1},{v_s2},{v_s3}={s1},{s2},{s3};"
-        f"local _e={{\"pairs\",\"ipairs\",\"tostring\",\"pcall\",\"type\"}};"
-        f"for i=1,5 do if type({v_env}[_e[i]])~=\"function\" then {v_s2}={v_s2}+1 end end;"
+        f"local {v_time}=os.clock and os.clock() or 0;"
+        f"local _g={{{str_pairs},{str_ipairs},{str_tostring},{str_pcall},{str_type}}};"
+        f"local _sum=0;"
+        f"for i=1,5 do local n=_g[i]; if type({v_env}[n])~=\"function\" then _sum=_sum+999 end; for j=1,#n do _sum=_sum+string.byte(n,j) end; end;"
+        f"local {v_s1}={calc_derivation(s1_target)};"
+        f"local {v_s2}={calc_derivation(s2_target)};"
+        f"local {v_s3}={calc_derivation(s3_target)};"
         f"{chunk_declarations}{payload_concat}"
         f"local {v_idx}=1;"
-        f"local {v_time}=os.clock and os.clock() or 0;"
     )
     
-    # READER FUNCTION: Timing Checks dinámicos y Cifrado Multi-estado
+    # READER FUNCTION: Timing Total (2.0s) + Decodificación Multi-Estado
     reader_func = (
         f"local function {v_reader}() "
         f"if {v_idx}>#{v_data} then return nil end;"
         
-        # Timing Check Distribuido (Corrupción Silenciosa)
-        f"local _now=os.clock and os.clock() or 0;"
-        f"if (_now-{v_time})>0.5 then {v_s3}={v_s3}+1 end;"
-        f"{v_time}=_now;"
+        # Timing Check Global
+        f"if (os.clock() - {v_time}) > 2.0 then {v_s3}={v_s3}+1 end;"
         
-        # PRNG Matemático
+        # PRNG Multi-Estado
         f"{v_s1}=({v_s1}*1664525+1013904223)%4294967296;"
         f"{v_s2}=({v_s2}*22695477+1)%4294967296;"
         f"{v_s3}=({v_s3}+{v_s1})%4294967296;"
@@ -153,14 +177,16 @@ def obfuscate_single_layer(code: str) -> str:
         f"end;"
     )
     
-    # EXECUTION WRAPPER: Ocultamos el load en un pcall silencioso
+    # EXECUTION WRAPPER: Constructor oculto para "load" + pcall silencioso
     run_logic = (
-        f"local _l={v_env}[\"\\108\\111\\97\\100\"] or {v_env}[\"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103\"];"
+        f"local _l_name=string.char(100+8,100+11,90+7,100);" # Crea "load" matemáticamente
+        f"local _l_str=string.char(108,111,97,100,115,116,114,105,110,103);" # "loadstring"
+        f"local _l={v_env}[_l_name] or {v_env}[_l_str];"
         f"local {v_ok},{v_res}=pcall(_l,{v_reader});"
         f"if {v_ok} and type({v_res})==\"function\" then return {v_res}(...) end;"
     )
     
-    # Retorno en una sola línea continua
+    # Retorno fusionado en una línea inquebrantable
     return f"return(function(...) {setup_code}{reader_func}{run_logic} end)(...);"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
@@ -236,7 +262,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Polymorphic Engine v6 ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"Engine V7 Ultimate ({min(layers_to_apply, 10)}-Layers)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
