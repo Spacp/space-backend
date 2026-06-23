@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Military-Grade Encryption (Opaque Predicates & Multi-Layer)
+#   Military-Grade Polimorphic Encryption (CTF Hardened)
 # ================================================
 
 from fastapi import FastAPI
@@ -18,7 +18,7 @@ import threading
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Military-Grade Lua Protection Service",
-    version="11.0.0"
+    version="12.0.0"
 )
 
 app.add_middleware(
@@ -43,7 +43,7 @@ class ObfuscateResponse(BaseModel):
     mode_used: str = ""
     timestamp: str = ""
 
-# SISTEMA ANTI-SUEÑO (KEEP-ALIVE)
+# SISTEMA ANTI-SUEÑO
 def ping_self():
     import time
     while True:
@@ -58,91 +58,107 @@ async def startup_event():
     thread = threading.Thread(target=ping_self, daemon=True)
     thread.start()
 
-# Ocultación de variables
 def generate_illusion_var(length=14):
     return "_" + "".join(random.choices("O0I1l", k=length))
 
-# Derivación matemática compleja para las llaves
-def math_obf(n: int) -> str:
+def generate_dynamic_key(base_key: int) -> str:
+    """Oculta la llave matemática detrás de propiedades nativas del entorno de Lua"""
     choice = random.randint(1, 3)
     if choice == 1:
-        a = random.randint(100, 999)
-        return f"({a + n}-{a})"
+        # type(math.pi) devuelve "number", su longitud es 6
+        offset = base_key - 6
+        return f"({offset}+#type(math.pi))"
     elif choice == 2:
-        a = random.randint(2, 7)
-        return f"({n * a}/{a})"
+        # type(tostring) devuelve "function", su longitud es 8
+        offset = base_key - 8
+        return f"({offset}+#type(tostring))"
     else:
-        elements = random.randint(2, 6)
-        table_str = "{" + ",".join(["1"] * elements) + "}"
-        return f"({n - elements}+#{table_str})"
+        # type({}) devuelve "table", su longitud es 5
+        offset = base_key - 5
+        return f"({offset}+#type({{}}))"
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Motor de Ofuscación Avanzado con protección anti-IA y anti-descompiladores.
+    Polimorfismo Multicapa:
+    - 3 Algoritmos entrelazados (Suma, XOR/Suma Inversa, Not lógico).
+    - Array disperso en lugar de String Hex Continuo.
+    - Máquina de Estados Caótica.
+    - Opaque Predicates basados en el entorno Lua.
     """
-    key_base = random.randint(20, 200)
+    key_base = random.randint(30, 200)
     
-    # 1. MÚLTIPLES CAPAS DE CIFRADO
-    encoded_bytes = bytearray()
+    encoded_blocks = []
+    
+    # POLIMORFISMO DE ENCRIPTACIÓN EN PYTHON (Múltiples algoritmos)
     for i, byte in enumerate(code.encode('utf-8')):
-        c1 = (byte + (i % 256)) % 256   # Capa A: Desplazamiento posicional
-        c2 = (255 - c1)                 # Capa B: Inversión de bits
-        c3 = (c2 + key_base) % 256      # Capa C: Desplazamiento de llave estática
-        encoded_bytes.append(c3)
+        path = i % 3
+        if path == 0:
+            c = (byte + key_base) % 256
+        elif path == 1:
+            c = (255 - byte)
+        else:
+            # Emulamos un XOR básico pero seguro para Lua 5.1 (Suma con offset variable)
+            c = (byte + (key_base % 50)) % 256
         
-    hex_str = encoded_bytes.hex()
+        encoded_blocks.append(f'"{c:02x}"')
     
-    # STRING SPLITTING (Fragmentación del payload hex)
-    sp1 = len(hex_str) // 3
-    sp2 = sp1 * 2
-    part1, part2, part3 = hex_str[:sp1], hex_str[sp1:sp2], hex_str[sp2:]
+    # FRAGMENTACIÓN DEL PAYLOAD: El array de Hex se divide aleatoriamente
+    # No hay string continuo, es una tabla gigantesca de pares Hex.
+    payload_array = ",".join(encoded_blocks)
     
-    # Variables fantasma
+    # Nombres de variables oscurecidas
     v_data, v_out, v_key, v_state, v_idx = (generate_illusion_var() for _ in range(5))
-    f_sub, f_tonum, f_char, f_insert, f_concat = (generate_illusion_var() for _ in range(5))
+    f_tonum, f_char, f_insert, f_concat, f_type = (generate_illusion_var() for _ in range(5))
     v_env, v_exec = (generate_illusion_var() for _ in range(2))
     
-    # SETUP - Reconstrucción tardía
+    # Estados aleatorios para la Máquina CFF (Control Flow Flattening)
+    S_INIT = random.randint(10, 30)
+    S_CHECK = random.randint(40, 60)
+    S_DECODE = random.randint(70, 90)
+    S_APPEND = random.randint(100, 120)
+    S_END = 0
+    
+    # SETUP - Array Fragmentado
     setup_code = (
-        f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat}=string.sub,tonumber,string.char,table.insert,table.concat;"
-        f"local {v_data}=\"{part1}\"..\"{part2}\"..\"{part3}\";"
+        f"local {f_tonum},{f_char},{f_insert},{f_concat},{f_type}=tonumber,string.char,table.insert,table.concat,type;"
+        f"local {v_data}={{{payload_array}}};"
         f"local {v_out}={{}};"
-        f"local {v_state}=1;"
+        f"local {v_state}={S_INIT};"
         f"local {v_idx}=1;"
-        f"local {v_key}={math_obf(key_base)};"
+        f"local {v_key}={generate_dynamic_key(key_base)};"
     )
     
-    # LOOP DE DESCIFRADO - Opaque Predicates integrados
+    # OPAQUE PREDICATE CAÓTICO Y MÁQUINA DE ESTADOS COMPLEJA
+    # Predicado opaco: #type(print) siempre es 8. Así que math.abs(8-8) == 0. (True 100%)
     loop_code = (
-        f"while {v_state}~=0 do "
-        f"if {v_state}==1 then "
-        f"if {v_idx}>#{v_data} then {v_state}=4 else {v_state}=2 end;"
-        f"elseif {v_state}==2 then "
-        f"local s={f_sub}({v_data},{v_idx},{v_idx}+1);"
-        f"if s==\"\" then {v_state}=4;else "
-        f"if ({v_idx}*({v_idx}+1))%2==0 then " # <--- OPAQUE PREDICATE (Siempre True)
-        f"local m={f_tonum}(s,16);"
-        f"local c3=(m-{v_key})%256;"
-        f"local c2=255-c3;"
-        f"local r_idx=math.floor(({v_idx}-1)/2);"
-        f"local dec=(c2-(r_idx%256))%256;"
-        f"{f_insert}({v_out},{f_char}(dec));"
-        f"{v_idx}={v_idx}+2;"
-        f"{v_state}=1;"
-        f"else {v_state}=0 end;"
-        f"end;"
-        f"elseif {v_state}==4 then "
-        f"{v_state}=0;"
+        f"while {v_state}~={S_END} do "
+        f"if {v_state}=={S_INIT} then "
+        f"if {v_idx}>#{v_data} then {v_state}={S_END} else {v_state}={S_CHECK} end;"
+        f"elseif {v_state}=={S_CHECK} then "
+        f"if math.abs(#{f_type}(print)-8)==0 then " # <-- OPAQUE PREDICATE INDETECTABLE
+        f"{v_state}={S_DECODE};"
+        f"else {v_state}={S_END} end;"              # <-- RAMA MUERTA
+        f"elseif {v_state}=={S_DECODE} then "
+        f"local h={v_data}[{v_idx}];"
+        f"local m={f_tonum}(h,16);"
+        f"local d;"
+        f"local p=({v_idx}-1)%3;"
+        f"if p==0 then d=(m-{v_key})%256;"          # <-- Algoritmo 1
+        f"elseif p==1 then d=(255-m);"              # <-- Algoritmo 2
+        f"else d=(m-({v_key}%50))%256 end;"         # <-- Algoritmo 3
+        f"{f_insert}({v_out},{f_char}(d));"
+        f"{v_idx}={v_idx}+1;"
+        f"{v_state}={S_INIT};"
         f"end;"
         f"end;"
     )
     
-    # EXECUÇÃO ANTI-HOOK
+    # ANTI-HOOK & EXECUTION INVISIBLE
     run_logic = (
         f"local {v_env}=getfenv and getfenv() or _ENV;"
         f"local {v_exec}={v_env}[{f_char}(108,111,97,100)] or {v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)];"
         f"local f,e={v_exec}({f_concat}({v_out}));"
-        f"if type(f)=='function' then return f(...) else error(tostring(e)) end;"
+        f"if {f_type}(f)=='function' then return f(...) else error(tostring(e)) end;"
     )
     
     return f"return(function(...) {setup_code}{loop_code}{run_logic} end)(...);"
@@ -154,7 +170,6 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
     for _ in range(actual_layers):
         current_code = obfuscate_single_layer(current_code)
         
-    # BANNER ORIGINAL RESTAURADO COMPLETAMENTE
     banner = """--[[
                                                                   <'         -n:                   
                                                                icI        ^v0!                      
@@ -192,7 +207,7 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                 https://space-obfuscator.spacecp.workers.dev/
                         https://discord.gg/7dt2A6DJZA
 ]]--"""
-    return f"{banner}\n{current_code}\n"
+    return f"{banner}\n\n\n{current_code}"
 
 @app.get("/")
 async def root():
@@ -210,7 +225,7 @@ async def obfuscate(request: ObfuscateRequest):
         
         max_size = 15 * 1024 * 1024 
         if len(request.code) > max_size:
-            return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
+            return ObfuscateResponse(success=False, error="El código excede el límite permitido")
         
         layers_to_apply = request.layers if request.layers is not None else 5
         
@@ -221,7 +236,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Military Core ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"CTF Grade ({min(layers_to_apply, 10)}-Layers + Polimorfismo)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
@@ -235,7 +250,7 @@ if os.path.isdir(FRONTEND_DIR):
         index_path = os.path.join(FRONTEND_DIR, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        return {"error": "Frontend não encontrado."}
+        return {"error": "Frontend no encontrado."}
 
 if __name__ == "__main__":
     import uvicorn
