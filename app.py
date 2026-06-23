@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Version 19.0.1: Environment-Locked & Anti-Tamper Engine (Hotfix)
+#   Version 19.0.2: Environment-Locked Engine (Bulletproof Syntax Hotfix)
 # ================================================
 
 from fastapi import FastAPI
@@ -19,7 +19,7 @@ import base64
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Environment-Locked Lua Protection Service",
-    version="19.0.1"
+    version="19.0.2"
 )
 
 app.add_middleware(
@@ -62,7 +62,8 @@ def generate_chaotic_var():
     length = random.randint(7, 16)
     prefix = random.choice(["ctx", "slot", "stk", "reg", "var", "pt", "l"])
     chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-    return f"_{prefix}_" + "".join(random.choices(chars, k=length))
+    # Cambiado a list comprehension para evitar errores de sintaxis "k=" en versiones antiguas de Python
+    return "_" + prefix + "_" + "".join([random.choice(chars) for _ in range(length)])
 
 class MultiStatePRNG:
     def __init__(self, s1, s2, s3):
@@ -78,23 +79,16 @@ class MultiStatePRNG:
         return (self.s1 + self.s2 + self.s3) % 256
 
 def obfuscate_single_layer(code: str) -> str:
-    """
-    Motor v9 (Anti-Tamper & Environment Cryptolock):
-    - Autopadding preventivo contra ataques de fuerza bruta.
-    - Semillas dinámicas vinculadas a la integridad del Script.
-    - Ocultación total de firmas nativas de Lua 5.1/Luau.
-    """
-    
     # 1. AUTO-PADDING
     if len(code) < 600:
         padding_lines = []
         for _ in range(random.randint(25, 40)):
             v1 = generate_chaotic_var()
             v2 = generate_chaotic_var()
-            padding_lines.append(f"local {v1} = function() return math.sin({random.randint(1,100)}) end; local {v2} = {v1}() and true or false;")
+            padding_lines.append("local " + v1 + " = function() return math.sin(" + str(random.randint(1,100)) + ") end; local " + v2 + " = " + v1 + "() and true or false;")
         code = "\n".join(padding_lines) + "\n" + code
 
-    # 2. PROCESAMIENTO CRIPTOGRÁFICO DE SEMILLAS MÓVILES
+    # 2. PROCESAMIENTO CRIPTOGRÁFICO DE SEMILLAS
     offset_1 = random.randint(200000, 800000)
     offset_2 = random.randint(100000, 900000)
     offset_3 = random.randint(300000, 700000)
@@ -119,7 +113,7 @@ def obfuscate_single_layer(code: str) -> str:
         
     b64_payload = base64.b64encode(enc_bytes).decode('utf-8')
     
-    # 3. APALANAMIENTO POLIMÓRFICO DE PARÁMETROS
+    # 3. APLANAMIENTO POLIMÓRFICO DE PARÁMETROS
     params_real = ["string.byte", "string.char", "string.sub", "table.insert", "os.clock", "type", "pcall", "string.find", "math.floor", "string.gsub"]
     params_fake = [generate_chaotic_var() for _ in params_real]
     
@@ -136,73 +130,71 @@ def obfuscate_single_layer(code: str) -> str:
     str_loadstring = '"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103"'
     str_getfenv = 'string.char(103,101,116,102,101,110,118)'
 
+    # Todo construido con concatenación estándar (+) para evitar el bug f-string y la caché de Python
     inner_code = (
-        f"local {v_env} = (_ENV or (function() local f = _G[{str_getfenv}]; if f then return f() else return _G end end)());"
+        "local " + v_env + " = (_ENV or (function() local f = _G[" + str_getfenv + "]; if f then return f() else return _G end end)());\n"
+        "local " + v_src + " = (debug and debug.getinfo) and debug.getinfo(1,'S').source or 'stealth';\n"
+        "local " + v_shash + " = 0; for i=1, #" + v_src + " do " + v_shash + " = (" + v_shash + " * 31 + " + v_byte + "(" + v_src + ", i)) % 4294967296 end;\n"
         
-        f"local {v_src} = (debug and debug.getinfo) and debug.getinfo(1,'S').source or 'stealth';"
-        f"local {v_shash} = 0; for i=1, #{v_src} do {v_shash} = ({v_shash} * 31 + {v_byte}({v_src}, i)) % 4294967296 end;"
+        "local " + v_sum + " = 0; for _k, _v in pairs(" + v_env + ") do if " + v_type + "(_v) == 'function' then " + v_sum + " = (" + v_sum + " + #_k) % 5000 end end;\n"
+        "if " + v_sum + " == 0 then " + v_sum + " = " + str(assumed_base) + " end;\n"
         
-        # HOTFIX AQUÍ: Eliminadas las llaves conflictivas de {k} para evitar romper el f-string de Python
-        f"local {v_sum} = 0; for k, v in pairs({v_env}) do if {v_type}(v) == 'function' then {v_sum} = ({v_sum} + #k) % 5000 end end;"
-        f"if {v_sum} == 0 then {v_sum} = {assumed_base} end;"
+        "local " + v_s1 + " = (" + v_sum + " + " + str(offset_1) + " + (" + v_shash + " % 1000)) % 4294967296;\n"
+        "local " + v_s2 + " = ((" + v_sum + " ~ " + str(offset_2) + ") + (" + v_shash + " % 500)) % 4294967296;\n"
+        "local " + v_s3 + " = (" + v_sum + " + " + str(offset_3) + " - (" + v_shash + " % 2000)) % 4294967296;\n"
         
-        f"local {v_s1} = ({v_sum} + {offset_1} + ({v_shash} % 1000)) % 4294967296;"
-        f"local {v_s2} = (({v_sum} ~ {offset_2}) + ({v_shash} % 500)) % 4294967296;"
-        f"local {v_s3} = ({v_sum} + {offset_3} - ({v_shash} % 2000)) % 4294967296;"
+        "local " + v_b64 + " = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";\n"
+        "local " + v_data + " = [=[" + b64_payload + "]=];\n"
+        v_data + " = " + v_gsub + "(" + v_data + ", '[^%w%+/=]', '');\n"
         
-        f"local {v_b64} = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";"
-        f"local {v_data} = [=[{b64_payload}]=];"
-        f"{v_data} = {v_gsub}({v_data}, '[^%w%+/=]', '');"
+        "local " + v_enc_bytes + " = {};\n"
+        "for i=1, #" + v_data + ", 4 do\n"
+        "  local n = (" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i,i), 1, true)-1)*262144+"
+        "(" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i+1,i+1), 1, true)-1)*4096+"
+        "(" + v_sub + "(" + v_data + ",i+2,i+2)=='=' and 0 or (" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i+2,i+2), 1, true)-1)*64)+"
+        "(" + v_sub + "(" + v_data + ",i+3,i+3)=='=' and 0 or (" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i+3,i+3), 1, true)-1));\n"
+        "  " + v_insert + "(" + v_enc_bytes + ", " + v_floor + "(n/65536)%256);\n"
+        "  if " + v_sub + "(" + v_data + ",i+2,i+2) ~= '=' then " + v_insert + "(" + v_enc_bytes + ", " + v_floor + "(n/256)%256) end;\n"
+        "  if " + v_sub + "(" + v_data + ",i+3,i+3) ~= '=' then " + v_insert + "(" + v_enc_bytes + ", n%256) end;\n"
+        "end;\n"
         
-        f"local {v_enc_bytes} = {{}};"
-        f"for i=1, #{v_data}, 4 do "
-        f"local n = ({v_find}({v_b64}, {v_sub}({v_data},i,i), 1, true)-1)*262144+"
-        f"({v_find}({v_b64}, {v_sub}({v_data},i+1,i+1), 1, true)-1)*4096+"
-        f"({v_sub}({v_data},i+2,i+2)=='=' and 0 or ({v_find}({v_b64}, {v_sub}({v_data},i+2,i+2), 1, true)-1)*64)+"
-        f"({v_sub}({v_data},i+3,i+3)=='=' and 0 or ({v_find}({v_b64}, {v_sub}({v_data},i+3,i+3), 1, true)-1));"
-        f"{v_insert}({v_enc_bytes}, {v_floor}(n/65536)%256);"
-        f"if {v_sub}({v_data},i+2,i+2) ~= '=' then {v_insert}({v_enc_bytes}, {v_floor}(n/256)%256) end;"
-        f"if {v_sub}({v_data},i+3,i+3) ~= '=' then {v_insert}({v_enc_bytes}, n%256) end;"
-        f"end;"
+        "if #" + v_enc_bytes + " < 3 then return nil end;\n"
+        "local " + v_check + " = " + v_enc_bytes + "[#" + v_enc_bytes + "-1]*256 + " + v_enc_bytes + "[#" + v_enc_bytes + "];\n"
+        "local " + v_calc_check + " = 0; for i=1, #" + v_enc_bytes + "-2 do " + v_calc_check + " = (" + v_calc_check + " + " + v_enc_bytes + "[i]) % 65535 end;\n"
+        "if " + v_check + " ~= " + v_calc_check + " then " + v_s3 + " = " + v_s3 + " + 999999 end;\n"
         
-        f"if #{v_enc_bytes} < 3 then return nil end;"
-        f"local {v_check} = {v_enc_bytes}[#{v_enc_bytes}-1]*256 + {v_enc_bytes}[#{v_enc_bytes}];"
-        f"local {v_calc_check} = 0; for i=1, #{v_enc_bytes}-2 do {v_calc_check} = ({v_calc_check} + {v_enc_bytes}[i]) % 65535 end;"
-        f"if {v_check} ~= {v_calc_check} then {v_s3} = {v_s3} + 999999 end;"
+        "local " + v_dec_idx + " = 1;\n"
+        "local " + v_t_start + " = " + v_clock + "();\n"
+        "local " + v_t_last + " = " + v_t_start + ";\n"
         
-        f"local {v_dec_idx} = 1;"
-        f"local {v_t_start} = {v_clock}();"
-        f"local {v_t_last} = {v_t_start};"
+        "local function " + v_reader + "()\n"
+        "  if " + v_dec_idx + " > (#" + v_enc_bytes + "-2) then return nil end;\n"
+        "  local now = " + v_clock + "();\n"
+        "  local delta = now - " + v_t_last + ";\n"
+        "  if delta > 0.3 or (now - " + v_t_start + ") > 4.0 then " + v_s1 + " = (" + v_s1 + " + 7) % 4294967296 end;\n"
+        "  " + v_t_last + " = now;\n"
         
-        f"local function {v_reader}() "
-        f"if {v_dec_idx} > (#{v_enc_bytes}-2) then return nil end;"
+        "  " + v_s1 + " = (" + v_s1 + " * 1664525 + 1013904223) % 4294967296;\n"
+        "  " + v_s2 + " = (" + v_s2 + " * 22695477 + 1) % 4294967296;\n"
+        "  " + v_s3 + " = (" + v_s3 + " + " + v_s1 + ") % 4294967296;\n"
+        "  local sh = (" + v_s1 + " + " + v_s2 + " + " + v_s3 + ") % 256;\n"
         
-        f"local now = {v_clock}();"
-        f"local delta = now - {v_t_last};"
-        f"if delta > 0.3 or (now - {v_t_start}) > 4.0 then {v_s1} = ({v_s1} + 7) % 4294967296 end;"
-        f"{v_t_last} = now;"
+        "  local m = " + v_enc_bytes + "[" + v_dec_idx + "];\n"
+        "  local dec = (m - sh) % 256;\n"
+        "  if dec < 0 then dec = dec + 256 end;\n"
+        "  " + v_dec_idx + " = " + v_dec_idx + " + 1;\n"
+        "  return " + v_char + "(dec);\n"
+        "end;\n"
         
-        f"{v_s1} = ({v_s1} * 1664525 + 1013904223) % 4294967296;"
-        f"{v_s2} = ({v_s2} * 22695477 + 1) % 4294967296;"
-        f"{v_s3} = ({v_s3} + {v_s1}) % 4294967296;"
-        f"local sh = ({v_s1} + {v_s2} + {v_s3}) % 256;"
-        
-        f"local m = {v_enc_bytes}[{v_dec_idx}];"
-        f"local dec = (m - sh) % 256;"
-        f"if dec < 0 then dec = dec + 256 end;"
-        f"{v_dec_idx} = {v_dec_idx} + 1;"
-        f"return {v_char}(dec);"
-        f"end;"
-        
-        f"local {v_l} = {v_env}[{str_load}] or {v_env}[{str_loadstring}];"
-        f"local {v_ok}, {v_res} = {v_pcall}({v_l}, {v_reader});"
-        f"if {v_ok} and {v_type}({v_res}) == 'function' then return {v_res}(...) end;"
+        "local " + v_l + " = " + v_env + "[" + str_load + "] or " + v_env + "[" + str_loadstring + "];\n"
+        "local " + v_ok + ", " + v_res + " = " + v_pcall + "(" + v_l + ", " + v_reader + ");\n"
+        "if " + v_ok + " and " + v_type + "(" + v_res + ") == 'function' then return " + v_res + "(...) end;\n"
     )
 
     params_fake_str = ",".join(params_fake)
     params_real_str = ",".join(params_real)
     
-    wrapper = f"return (function({params_fake_str})\n{inner_code}\nend)({params_real_str})"
+    wrapper = "return (function(" + params_fake_str + ")\n" + inner_code + "\nend)(" + params_real_str + ")"
     return wrapper
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
