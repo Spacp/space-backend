@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Military-Grade Polimorphic Encryption v3 (PRNG & CFF)
+#   Military-Grade Polimorphic Engine v4 (Memory-Leak Prevention)
 # ================================================
 
 from fastapi import FastAPI
@@ -18,7 +18,7 @@ import threading
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Military-Grade Lua Protection Service",
-    version="13.0.0"
+    version="14.0.0"
 )
 
 app.add_middleware(
@@ -57,15 +57,23 @@ async def startup_event():
     thread = threading.Thread(target=ping_self, daemon=True)
     thread.start()
 
-def generate_illusion_var(length=14):
+def generate_illusion_var(length=16):
     return "_" + "".join(random.choices("O0I1l", k=length))
 
-# Generador Congruencial Lineal (LCG) en Python para replicar en Lua
-class LCG:
-    def __init__(self, seed):
-        self.seed = seed
-        self.a = 1664525
-        self.c = 1013904223
+def generate_math_seed(target_seed: int) -> str:
+    """Oculta la semilla hardcodeada usando matemáticas engañosas"""
+    offset = random.randint(10000, 99999)
+    multiplier = random.randint(2, 5)
+    base = (target_seed - offset) / multiplier
+    return f"({base}*{multiplier}+{offset})"
+
+# Generador LCG Dinámico y Mutante
+class DynamicLCG:
+    def __init__(self):
+        self.seed = random.randint(100000, 999999)
+        # Parámetros aleatorios pero válidos para un LCG (a = impar, c = impar)
+        self.a = random.randint(10000, 99999) | 1 
+        self.c = random.randint(10000, 99999) | 1
         self.m = 2**32
 
     def next(self):
@@ -74,104 +82,75 @@ class LCG:
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Motor v3:
-    - LCG PRNG para Polimorfismo Real (Caos matemático).
-    - CFF Avanzado con ramas trampa.
-    - Anti-Hooking de Entorno Nativo.
+    Motor v4 (Anti-Memory Dump):
+    - LCG de parámetros dinámicos.
+    - Cifrado Polinómico.
+    - Lua 'load()' con Reader Function (Evita table.concat).
+    - Anti-Debug con debug.getinfo.
     """
-    base_seed = random.randint(100000, 999999)
-    prng = LCG(base_seed)
+    lcg = DynamicLCG()
+    initial_seed = lcg.seed
     
     encoded_blocks = []
     
-    # POLIMORFISMO CAÓTICO: La operación cambia aleatoriamente según el PRNG
-    for byte in code.encode('utf-8'):
-        rand_val = prng.next()
-        op_type = rand_val % 4
-        shift = (rand_val // 100) % 256
-        
-        if op_type == 0:
-            c = (byte + shift) % 256
-        elif op_type == 1:
-            c = (255 - byte)
-        elif op_type == 2:
-            c = (byte ^ (shift % 128)) # XOR básico simimulado
-        else:
-            c = (byte - shift) % 256
-            if c < 0: c += 256
-            
+    # Cifrado Polinómico y LCG
+    for i, byte in enumerate(code.encode('utf-8')):
+        rand_val = lcg.next()
+        shift = (rand_val % 256)
+        # Sustitución no lineal: (Byte + Shift + Posición) % 256
+        c = (byte + shift + (i % 50)) % 256
         encoded_blocks.append(f'"{c:02x}"')
     
     payload_array = ",".join(encoded_blocks)
     
     # Variables de ilusión
-    v_data, v_out, v_state, v_idx, v_seed = (generate_illusion_var() for _ in range(5))
-    f_tonum, f_char, f_insert, f_concat, f_type = (generate_illusion_var() for _ in range(5))
-    v_env, v_exec, v_math_floor = (generate_illusion_var() for _ in range(3))
+    v_data, v_idx, v_seed = (generate_illusion_var() for _ in range(3))
+    f_tonum, f_char, f_math_floor = (generate_illusion_var() for _ in range(3))
+    v_reader, v_env, v_exec = (generate_illusion_var() for _ in range(3))
     
-    # Estados de CFF
-    S_INIT = random.randint(100, 199)
-    S_FAKE = random.randint(200, 299)
-    S_DECODE = random.randint(300, 399)
-    S_ADVANCE = random.randint(400, 499)
-    S_END = random.randint(500, 599)
-    
-    # LCG y Setup en Lua
+    # Setup del Entorno
     setup_code = (
-        f"local {f_tonum},{f_char},{f_insert},{f_concat},{f_type}=tonumber,string.char,table.insert,table.concat,type;"
-        f"local {v_math_floor}=math.floor;"
+        f"local {f_tonum},{f_char},{f_math_floor}=tonumber,string.char,math.floor;"
         f"local {v_data}={{{payload_array}}};"
-        f"local {v_out}={{}};"
-        f"local {v_state}={S_INIT};"
         f"local {v_idx}=1;"
-        f"local {v_seed}={base_seed};"
+        f"local {v_seed}={generate_math_seed(initial_seed)};"
     )
     
-    # LOOP DE DESCIFRADO (CFF CAÓTICO + PRNG)
-    loop_code = (
-        f"while {v_state}~={S_END} do "
-        # ESTADO INICIAL
-        f"if {v_state}=={S_INIT} then "
-        f"if {v_idx}>#{v_data} then {v_state}={S_END} else {v_state}={S_FAKE} end;"
-        # ESTADO FALSO (Ramas Muertas y cálculos basura para desviar la atención)
-        f"elseif {v_state}=={S_FAKE} then "
-        f"local _junk = {v_seed} % 2;"
-        f"if _junk == 5 then {v_state}={S_END} else {v_state}={S_DECODE} end;"
-        # ESTADO DE DECODIFICACIÓN (Usando el LCG)
-        f"elseif {v_state}=={S_DECODE} then "
-        f"{v_seed}=({v_seed} * 1664525 + 1013904223) % 4294967296;"
-        f"local op={v_seed} % 4;"
-        f"local sh=({v_math_floor}({v_seed} / 100)) % 256;"
-        f"local m={f_tonum}({v_data}[{v_idx}], 16);"
-        f"local d;"
-        f"if op==0 then d=(m-sh)%256; if d<0 then d=d+256 end;"
-        f"elseif op==1 then d=(255-m);"
-        f"elseif op==2 then "
-        # Lógica XOR básica compatible con Lua 5.1 sin bit32
-        f"local a,b,p,r=m,sh%128,1,0;"
-        f"while a>0 or b>0 do local ax,bx=a%2,b%2; if ax~=bx then r=r+p end; a={v_math_floor}(a/2); b={v_math_floor}(b/2); p=p*2; end;"
-        f"d=r;"
-        f"else d=(m+sh)%256; end;"
-        f"{f_insert}({v_out},{f_char}(d));"
-        f"{v_state}={S_ADVANCE};"
-        # ESTADO DE AVANCE
-        f"elseif {v_state}=={S_ADVANCE} then "
+    # LA MAGIA: Reader Function para `load`
+    # Esto lee y descifra BYTE POR BYTE directamente hacia el compilador de C.
+    # NUNCA se usa table.concat, el string original nunca existe en memoria.
+    reader_func = (
+        f"local function {v_reader}() "
+        f"if {v_idx}>#{v_data} then return nil end;"
+        # OPAQUE PREDICATE: math.sin(x) * math.cos(x) NUNCA es > 1 (Límite matemático real)
+        f"if (math.sin({v_idx})*math.cos({v_idx}))>1 then return {f_char}(0) end;"
+        # LCG Dinámico con parámetros únicos generados en Python
+        f"{v_seed}=({v_seed}*{lcg.a}+{lcg.c})%4294967296;"
+        f"local m={f_tonum}({v_data}[{v_idx}],16);"
+        f"local sh={v_seed}%256;"
+        f"local dec=(m-sh-(({v_idx}-1)%50))%256;"
+        f"if dec<0 then dec=dec+256 end;"
         f"{v_idx}={v_idx}+1;"
-        f"{v_state}={S_INIT};"
-        f"end;"
+        f"return {f_char}(dec);"
         f"end;"
     )
     
-    # ANTI-HOOKING: Detectar si load/table.concat han sido modificados por un depurador
+    # Ejecución y Anti-Debug Básico
     run_logic = (
         f"local {v_env}=getfenv and getfenv() or _ENV;"
-        f"local {v_exec}={v_env}[{f_char}(108,111,97,100)] or {v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)];"
-        f"if not tostring({v_exec}):match('function') then return end;" # Anti-Hook Básico
-        f"local f,e={v_exec}({f_concat}({v_out}));"
-        f"if {f_type}(f)=='function' then return f(...) else error(tostring(e)) end;"
+        # Intentar detectar si alguien está haciendo stepping con un debugger
+        f"if debug and debug.getinfo then "
+        f"local info=debug.getinfo(1,'l'); if info and info.currentline~=nil and info.currentline<0 then return end;"
+        f"end;"
+        # Ejecutar usando la función lectora
+        f"local {v_exec}={v_env}[{f_char}(108,111,97,100)];"
+        f"if not {v_exec} then {v_exec}={v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)] end;"
+        # Si 'load' soporta iteradores (Lua 5.1+), usamos el lector directo. Si no, fallback de seguridad.
+        f"local f,e={v_exec}({v_reader});" 
+        f"if type(f)=='function' then return f(...) else error(tostring(e)) end;"
     )
     
-    return f"return(function(...) {setup_code}{loop_code}{run_logic} end)(...);"
+    return f"return(function(...) {setup_code}{reader_func}{run_logic} end)(...);"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
     actual_layers = max(1, min(requested_layers, 10))
@@ -246,7 +225,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Polymorphic Engine v3 ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"Polymorphic Engine v4 ({min(layers_to_apply, 10)}-Layers)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
