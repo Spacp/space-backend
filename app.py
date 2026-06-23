@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Military-Grade Polimorphic Engine v4 (Memory-Leak Prevention)
+#   Military-Grade Polimorphic Engine v5 (Anti-Emulation & AST Bombs)
 # ================================================
 
 from fastapi import FastAPI
@@ -18,7 +18,7 @@ import threading
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Military-Grade Lua Protection Service",
-    version="14.0.0"
+    version="15.0.0"
 )
 
 app.add_middleware(
@@ -57,21 +57,19 @@ async def startup_event():
     thread = threading.Thread(target=ping_self, daemon=True)
     thread.start()
 
-def generate_illusion_var(length=16):
+def generate_illusion_var(length=18):
     return "_" + "".join(random.choices("O0I1l", k=length))
 
 def generate_math_seed(target_seed: int) -> str:
-    """Oculta la semilla hardcodeada usando matemáticas engañosas"""
     offset = random.randint(10000, 99999)
     multiplier = random.randint(2, 5)
     base = (target_seed - offset) / multiplier
     return f"({base}*{multiplier}+{offset})"
 
-# Generador LCG Dinámico y Mutante
+# Generador LCG Dinámico
 class DynamicLCG:
     def __init__(self):
         self.seed = random.randint(100000, 999999)
-        # Parámetros aleatorios pero válidos para un LCG (a = impar, c = impar)
         self.a = random.randint(10000, 99999) | 1 
         self.c = random.randint(10000, 99999) | 1
         self.m = 2**32
@@ -82,11 +80,10 @@ class DynamicLCG:
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Motor v4 (Anti-Memory Dump):
-    - LCG de parámetros dinámicos.
-    - Cifrado Polinómico.
-    - Lua 'load()' con Reader Function (Evita table.concat).
-    - Anti-Debug con debug.getinfo.
+    Motor v5 Supremo (Anti-Memory Dump + Anti-Emulation):
+    - AST Bombing (Explota parsers de Python).
+    - Timing Checks (Detecta emulación).
+    - Honeypot Routing (Si hay debug, carga un script falso).
     """
     lcg = DynamicLCG()
     initial_seed = lcg.seed
@@ -97,35 +94,66 @@ def obfuscate_single_layer(code: str) -> str:
     for i, byte in enumerate(code.encode('utf-8')):
         rand_val = lcg.next()
         shift = (rand_val % 256)
-        # Sustitución no lineal: (Byte + Shift + Posición) % 256
         c = (byte + shift + (i % 50)) % 256
         encoded_blocks.append(f'"{c:02x}"')
     
     payload_array = ",".join(encoded_blocks)
     
-    # Variables de ilusión
+    # Generación del Cebo (Honeypot) cifrado con el mismo método
+    honeypot_code = "print('Hello World! Lua Script Loaded Successfully.')"
+    honey_lcg = DynamicLCG()
+    honey_seed = honey_lcg.seed
+    honey_blocks = []
+    for i, byte in enumerate(honeypot_code.encode('utf-8')):
+        rand_val = honey_lcg.next()
+        shift = (rand_val % 256)
+        c = (byte + shift + (i % 50)) % 256
+        honey_blocks.append(f'"{c:02x}"')
+    honey_array = ",".join(honey_blocks)
+    
+    # Variables de ilusión masivas
     v_data, v_idx, v_seed = (generate_illusion_var() for _ in range(3))
     f_tonum, f_char, f_math_floor = (generate_illusion_var() for _ in range(3))
     v_reader, v_env, v_exec = (generate_illusion_var() for _ in range(3))
+    v_time_start, v_is_compromised = (generate_illusion_var() for _ in range(2))
     
-    # Setup del Entorno
+    # BOMBA AST: 100 niveles de anidación y negaciones redundantes
+    # Para Lua esto es instantáneo, para un analizador estático es una pesadilla de parseo
+    ast_bomb = "local " + generate_illusion_var() + "=" + "{"*80 + "}"*80 + ";"
+    ast_logic_bomb = "if " + "not "*40 + "false then " + generate_illusion_var() + "=1 end;"
+
+    # Setup del Entorno con AST Bomb y Timers
     setup_code = (
+        f"{ast_bomb}{ast_logic_bomb}"
         f"local {f_tonum},{f_char},{f_math_floor}=tonumber,string.char,math.floor;"
+        f"local {v_time_start}=os.clock and os.clock() or 0;"
+        f"local {v_is_compromised}=false;"
+        # Si la tabla real o el honeypot se cargan, se decide más tarde
         f"local {v_data}={{{payload_array}}};"
         f"local {v_idx}=1;"
         f"local {v_seed}={generate_math_seed(initial_seed)};"
     )
     
-    # LA MAGIA: Reader Function para `load`
-    # Esto lee y descifra BYTE POR BYTE directamente hacia el compilador de C.
-    # NUNCA se usa table.concat, el string original nunca existe en memoria.
+    # LA MAGIA: Reader Function que detecta Debugging y Timers
     reader_func = (
         f"local function {v_reader}() "
+        # TIMING CHECK: Si el iterador lleva más de 3 segundos ejecutándose, activa el honeypot en el aire
+        f"if os.clock and (os.clock()-{v_time_start})>3 then {v_is_compromised}=true end;"
+        
+        # Honeypot Routing Dinámico
+        f"if {v_is_compromised} then "
+        f"  {v_data}={{{honey_array}}};"
+        f"  if {v_idx}==1 then {v_seed}={generate_math_seed(honey_seed)} end;"
+        f"end;"
+        
         f"if {v_idx}>#{v_data} then return nil end;"
-        # OPAQUE PREDICATE: math.sin(x) * math.cos(x) NUNCA es > 1 (Límite matemático real)
         f"if (math.sin({v_idx})*math.cos({v_idx}))>1 then return {f_char}(0) end;"
-        # LCG Dinámico con parámetros únicos generados en Python
-        f"{v_seed}=({v_seed}*{lcg.a}+{lcg.c})%4294967296;"
+        
+        # Descifrador normal o Honeypot (según el estado)
+        f"local a_val, c_val = {lcg.a}, {lcg.c};"
+        f"if {v_is_compromised} then a_val, c_val = {honey_lcg.a}, {honey_lcg.c} end;"
+        
+        f"{v_seed}=({v_seed}*a_val+c_val)%4294967296;"
         f"local m={f_tonum}({v_data}[{v_idx}],16);"
         f"local sh={v_seed}%256;"
         f"local dec=(m-sh-(({v_idx}-1)%50))%256;"
@@ -135,19 +163,15 @@ def obfuscate_single_layer(code: str) -> str:
         f"end;"
     )
     
-    # Ejecución y Anti-Debug Básico
+    # Ejecución Protegida
     run_logic = (
         f"local {v_env}=getfenv and getfenv() or _ENV;"
-        # Intentar detectar si alguien está haciendo stepping con un debugger
         f"if debug and debug.getinfo then "
-        f"local info=debug.getinfo(1,'l'); if info and info.currentline~=nil and info.currentline<0 then return end;"
+        f"local info=debug.getinfo(1,'l'); if info and info.currentline~=nil and info.currentline<0 then {v_is_compromised}=true end;"
         f"end;"
-        # Ejecutar usando la función lectora
-        f"local {v_exec}={v_env}[{f_char}(108,111,97,100)];"
-        f"if not {v_exec} then {v_exec}={v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)] end;"
-        # Si 'load' soporta iteradores (Lua 5.1+), usamos el lector directo. Si no, fallback de seguridad.
+        f"local {v_exec}={v_env}[{f_char}(108,111,97,100)] or {v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)];"
         f"local f,e={v_exec}({v_reader});" 
-        f"if type(f)=='function' then return f(...) else error(tostring(e)) end;"
+        f"if type(f)=='function' then return f(...) else return end;"
     )
     
     return f"return(function(...) {setup_code}{reader_func}{run_logic} end)(...);"
@@ -225,7 +249,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Polymorphic Engine v4 ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"Anti-Emulation V5 ({min(layers_to_apply, 10)}-Layers)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
