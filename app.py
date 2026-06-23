@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Military-Grade Polimorphic Engine v5 (Anti-Emulation & AST Bombs)
+#   Military-Grade Polimorphic Engine v6 (CTF Unbreakable)
 # ================================================
 
 from fastapi import FastAPI
@@ -18,7 +18,7 @@ import threading
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Military-Grade Lua Protection Service",
-    version="15.0.0"
+    version="16.0.0"
 )
 
 app.add_middleware(
@@ -57,123 +57,110 @@ async def startup_event():
     thread = threading.Thread(target=ping_self, daemon=True)
     thread.start()
 
-def generate_illusion_var(length=18):
+def generate_illusion_var():
+    # Longitudes erráticas para romper patrones visuales
+    length = random.randint(5, 25)
     return "_" + "".join(random.choices("O0I1l", k=length))
 
-def generate_math_seed(target_seed: int) -> str:
-    offset = random.randint(10000, 99999)
-    multiplier = random.randint(2, 5)
-    base = (target_seed - offset) / multiplier
-    return f"({base}*{multiplier}+{offset})"
-
-# Generador LCG Dinámico
-class DynamicLCG:
-    def __init__(self):
-        self.seed = random.randint(100000, 999999)
-        self.a = random.randint(10000, 99999) | 1 
-        self.c = random.randint(10000, 99999) | 1
-        self.m = 2**32
+# PRNG Multi-Estado (Python Simulator)
+class MultiStatePRNG:
+    def __init__(self, s1, s2, s3):
+        self.s1 = s1
+        self.s2 = s2
+        self.s3 = s3
+        self.m = 4294967296
 
     def next(self):
-        self.seed = (self.a * self.seed + self.c) % self.m
-        return self.seed
+        self.s1 = (self.s1 * 1664525 + 1013904223) % self.m
+        self.s2 = (self.s2 * 22695477 + 1) % self.m
+        self.s3 = (self.s3 + self.s1) % self.m
+        return (self.s1 + self.s2 + self.s3) % 256
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Motor v5 Supremo (Anti-Memory Dump + Anti-Emulation):
-    - AST Bombing (Explota parsers de Python).
-    - Timing Checks (Detecta emulación).
-    - Honeypot Routing (Si hay debug, carga un script falso).
+    Motor v6 Supremo (Derrota de Análisis Estático/Dinámico):
+    - Padding Dinámico para payloads cortos.
+    - PRNG Multi-Estado.
+    - Cifrado en cadenas escapadas nativas (\\ddd).
+    - Múltiples trampas anti-emulación y corrupción silenciosa.
     """
-    lcg = DynamicLCG()
-    initial_seed = lcg.seed
-    
-    encoded_blocks = []
-    
-    # Cifrado Polinómico y LCG
-    for i, byte in enumerate(code.encode('utf-8')):
-        rand_val = lcg.next()
-        shift = (rand_val % 256)
-        c = (byte + shift + (i % 50)) % 256
-        encoded_blocks.append(f'"{c:02x}"')
-    
-    payload_array = ",".join(encoded_blocks)
-    
-    # Generación del Cebo (Honeypot) cifrado con el mismo método
-    honeypot_code = "print('Hello World! Lua Script Loaded Successfully.')"
-    honey_lcg = DynamicLCG()
-    honey_seed = honey_lcg.seed
-    honey_blocks = []
-    for i, byte in enumerate(honeypot_code.encode('utf-8')):
-        rand_val = honey_lcg.next()
-        shift = (rand_val % 256)
-        c = (byte + shift + (i % 50)) % 256
-        honey_blocks.append(f'"{c:02x}"')
-    honey_array = ",".join(honey_blocks)
-    
-    # Variables de ilusión masivas
-    v_data, v_idx, v_seed = (generate_illusion_var() for _ in range(3))
-    f_tonum, f_char, f_math_floor = (generate_illusion_var() for _ in range(3))
-    v_reader, v_env, v_exec = (generate_illusion_var() for _ in range(3))
-    v_time_start, v_is_compromised = (generate_illusion_var() for _ in range(2))
-    
-    # BOMBA AST: 100 niveles de anidación y negaciones redundantes
-    # Para Lua esto es instantáneo, para un analizador estático es una pesadilla de parseo
-    ast_bomb = "local " + generate_illusion_var() + "=" + "{"*80 + "}"*80 + ";"
-    ast_logic_bomb = "if " + "not "*40 + "false then " + generate_illusion_var() + "=1 end;"
+    # 1. PADDING DE PAYLOAD (Evita ataques a scripts cortos)
+    pad_len = random.randint(50, 150)
+    padding = "--" + "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=pad_len)) + "\n"
+    code = padding + code
 
-    # Setup del Entorno con AST Bomb y Timers
+    # 2. SEMILLAS MULTI-ESTADO
+    s1 = random.randint(100000, 999999)
+    s2 = random.randint(100000, 999999)
+    s3 = random.randint(100000, 999999)
+    prng = MultiStatePRNG(s1, s2, s3)
+    
+    # 3. ENCRIPTACIÓN ESCAPADA (Evita tablas HEX legibles)
+    enc_str = ""
+    for byte in code.encode('utf-8'):
+        sh = prng.next()
+        c = (byte + sh) % 256
+        enc_str += f"\\{c:03d}"
+        
+    # 4. FRAGMENTACIÓN DE STRINGS (String Splitting)
+    # Partimos la mega cadena en fragmentos aleatorios para ensamblarla en Lua
+    chunk_size = random.randint(2000, 4000)
+    chunks = [enc_str[i:i+chunk_size] for i in range(0, len(enc_str), chunk_size)]
+    
+    v_chunks = [generate_illusion_var() for _ in chunks]
+    chunk_declarations = "".join([f"local {v}=\"{c}\";" for v, c in zip(v_chunks, chunks)])
+    payload_concat = "local " + generate_illusion_var() + "=" + "..".join(v_chunks) + ";"
+    v_data = payload_concat.split("=")[0].replace("local ", "")
+    
+    # Variables Opacas
+    v_s1, v_s2, v_s3 = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
+    v_env, v_idx, v_time = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
+    v_reader, v_ok, v_res = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
+    
+    # SETUP LUA & ANTI-DEBUG GLOBAL
+    # Se validan globales silenciosamente. Si alguien modificó el entorno, s2 se corrompe.
     setup_code = (
-        f"{ast_bomb}{ast_logic_bomb}"
-        f"local {f_tonum},{f_char},{f_math_floor}=tonumber,string.char,math.floor;"
-        f"local {v_time_start}=os.clock and os.clock() or 0;"
-        f"local {v_is_compromised}=false;"
-        # Si la tabla real o el honeypot se cargan, se decide más tarde
-        f"local {v_data}={{{payload_array}}};"
+        f"local {v_env}=getfenv and getfenv() or _ENV;"
+        f"local {v_s1},{v_s2},{v_s3}={s1},{s2},{s3};"
+        f"local _e={{\"pairs\",\"ipairs\",\"tostring\",\"pcall\",\"type\"}};"
+        f"for i=1,5 do if type({v_env}[_e[i]])~=\"function\" then {v_s2}={v_s2}+1 end end;"
+        f"{chunk_declarations}{payload_concat}"
         f"local {v_idx}=1;"
-        f"local {v_seed}={generate_math_seed(initial_seed)};"
+        f"local {v_time}=os.clock and os.clock() or 0;"
     )
     
-    # LA MAGIA: Reader Function que detecta Debugging y Timers
+    # READER FUNCTION: Timing Checks dinámicos y Cifrado Multi-estado
     reader_func = (
         f"local function {v_reader}() "
-        # TIMING CHECK: Si el iterador lleva más de 3 segundos ejecutándose, activa el honeypot en el aire
-        f"if os.clock and (os.clock()-{v_time_start})>3 then {v_is_compromised}=true end;"
-        
-        # Honeypot Routing Dinámico
-        f"if {v_is_compromised} then "
-        f"  {v_data}={{{honey_array}}};"
-        f"  if {v_idx}==1 then {v_seed}={generate_math_seed(honey_seed)} end;"
-        f"end;"
-        
         f"if {v_idx}>#{v_data} then return nil end;"
-        f"if (math.sin({v_idx})*math.cos({v_idx}))>1 then return {f_char}(0) end;"
         
-        # Descifrador normal o Honeypot (según el estado)
-        f"local a_val, c_val = {lcg.a}, {lcg.c};"
-        f"if {v_is_compromised} then a_val, c_val = {honey_lcg.a}, {honey_lcg.c} end;"
+        # Timing Check Distribuido (Corrupción Silenciosa)
+        f"local _now=os.clock and os.clock() or 0;"
+        f"if (_now-{v_time})>0.5 then {v_s3}={v_s3}+1 end;"
+        f"{v_time}=_now;"
         
-        f"{v_seed}=({v_seed}*a_val+c_val)%4294967296;"
-        f"local m={f_tonum}({v_data}[{v_idx}],16);"
-        f"local sh={v_seed}%256;"
-        f"local dec=(m-sh-(({v_idx}-1)%50))%256;"
+        # PRNG Matemático
+        f"{v_s1}=({v_s1}*1664525+1013904223)%4294967296;"
+        f"{v_s2}=({v_s2}*22695477+1)%4294967296;"
+        f"{v_s3}=({v_s3}+{v_s1})%4294967296;"
+        f"local sh=({v_s1}+{v_s2}+{v_s3})%256;"
+        
+        f"local m=string.byte({v_data},{v_idx});"
+        f"local dec=(m-sh)%256;"
         f"if dec<0 then dec=dec+256 end;"
         f"{v_idx}={v_idx}+1;"
-        f"return {f_char}(dec);"
+        f"return string.char(dec);"
         f"end;"
     )
     
-    # Ejecución Protegida
+    # EXECUTION WRAPPER: Ocultamos el load en un pcall silencioso
     run_logic = (
-        f"local {v_env}=getfenv and getfenv() or _ENV;"
-        f"if debug and debug.getinfo then "
-        f"local info=debug.getinfo(1,'l'); if info and info.currentline~=nil and info.currentline<0 then {v_is_compromised}=true end;"
-        f"end;"
-        f"local {v_exec}={v_env}[{f_char}(108,111,97,100)] or {v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)];"
-        f"local f,e={v_exec}({v_reader});" 
-        f"if type(f)=='function' then return f(...) else return end;"
+        f"local _l={v_env}[\"\\108\\111\\97\\100\"] or {v_env}[\"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103\"];"
+        f"local {v_ok},{v_res}=pcall(_l,{v_reader});"
+        f"if {v_ok} and type({v_res})==\"function\" then return {v_res}(...) end;"
     )
     
+    # Retorno en una sola línea continua
     return f"return(function(...) {setup_code}{reader_func}{run_logic} end)(...);"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
@@ -249,7 +236,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Anti-Emulation V5 ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"Polymorphic Engine v6 ({min(layers_to_apply, 10)}-Layers)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
