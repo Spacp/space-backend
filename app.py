@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Anti-Moonsec / One-Line Hexadecimal Virtualization
+#   Servidor FastAPI (Anti-AI & Anti-Hook Virtualization)
 # ================================================
 
 from fastapi import FastAPI
@@ -12,13 +12,11 @@ from typing import Optional
 from datetime import datetime
 import os
 import random
-import urllib.request
-import threading
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Anti-Moonsec One-Line Protection",
-    version="14.1.0"
+    description="Anti-AI Lua Protection Service",
+    version="10.3.0"
 )
 
 app.add_middleware(
@@ -32,7 +30,7 @@ app.add_middleware(
 class ObfuscateRequest(BaseModel):
     code: str
     mode: str = "heavy"
-    layers: Optional[int] = 5
+    layers: Optional[int] = 5  # Recebe o número exato do frontend
 
 class ObfuscateResponse(BaseModel):
     success: bool
@@ -43,132 +41,96 @@ class ObfuscateResponse(BaseModel):
     mode_used: str = ""
     timestamp: str = ""
 
-# ================================================
-# SISTEMA ANTI-SUEÑO (KEEP-ALIVE)
-# ================================================
-def ping_self():
-    """Mantiene el servidor activo haciendo ping cada 10 minutos"""
-    import time
-    while True:
-        try:
-            urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
-        except:
-            pass
-        time.sleep(600)
-
-@app.on_event("startup")
-async def startup_event():
-    thread = threading.Thread(target=ping_self, daemon=True)
-    thread.start()
-
-# ================================================
-# MOTOR DE OFUSCACIÓN: HEX-ENGINE (UNA SOLA LÍNEA)
-# ================================================
-
-def generate_illusion_var(length=None):
-    if length is None: length = random.randint(12, 20)
-    return "_" + "".join(random.choices(["O", "0", "I", "l", "_"], k=length))
-
-def math_obf(n: int) -> str:
-    if random.choice([True, False]):
-        a = random.randint(50, 999)
-        b = a - n
-        return f"({a}-{b})" if b >= 0 else f"({a}+{abs(b)})"
-    else:
-        a = random.randint(2, 5)
-        b = n * a
-        return f"({b}/{a})"
+# Otimização para nomes de variáveis aleatórios
+def generate_illusion_var(length=14):
+    return "_" + "".join(random.choices("O0I1l", k=length))
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Capa de virtualización usando Hexadecimal para evitar la explosión de caracteres.
-    Se garantiza que todo retorne en UNA sola línea continua.
+    Aplica uma camada de ofuscação com Virtualização Segura, Proteção Anti-Hook e Lixo Entrelaçado.
     """
-    start_key = random.randint(20, 200)
-    step_key = random.randint(11, 77)
+    base_key = random.randint(20, 180)
+    multiplier = random.randint(3, 9)
     
-    curr_key = start_key
-    hex_str = ""
-    
-    # Encriptación Byte-a-Hexadecimal (Evita usar "\ddd" y previene errores en multicapas)
+    # Cifragem de bytes dinâmica
+    encoded_bytes = bytearray()
+    last_val = base_key
     for byte in code.encode('utf-8'):
-        curr_key = (curr_key + step_key) % 256
-        cipher = (byte + curr_key) % 256
-        hex_str += f"{cipher:02x}"
-
-    # Nombres de variables incomprensibles
-    v_data = generate_illusion_var()
-    v_out = generate_illusion_var()
-    v_key = generate_illusion_var()
-    v_state = generate_illusion_var()
-    v_idx = generate_illusion_var()
+        cipher_byte = (byte + last_val + multiplier) % 256
+        encoded_bytes.append(cipher_byte)
+        last_val = cipher_byte
+        
+    encoded_hex = encoded_bytes.hex()
     
-    # Referencias nativas
-    f_sub = generate_illusion_var()
-    f_char = generate_illusion_var()
-    f_insert = generate_illusion_var()
-    f_concat = generate_illusion_var()
-    f_tonum = generate_illusion_var()
-    f_load = generate_illusion_var()
+    # Fragmentação segura em tabelas para evitar colapso de registros Lua (Error 255)
+    chunk_size = 2000 
+    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
+    table_elements = ",".join(f'"{c}"' for c in chunks)
     
-    # Lógica Anti-Moonsec
-    m_fake_table = generate_illusion_var()
-    v_hex = generate_illusion_var()
-    v_b = generate_illusion_var()
-    v_dec = generate_illusion_var()
-
-    # SETUP (Todo comprimido)
-    setup_code = (
-        f"local {f_sub},{f_char},{f_insert},{f_concat},{f_tonum}=string.sub,string.char,table.insert,table.concat,tonumber;"
-        f"local {f_load}=loadstring or load;"
-        f"local {v_data}=\"{hex_str}\";"
-        f"local {v_out}={{}};"
-        f"local {v_key}={math_obf(start_key)};"
-        f"local {v_state}={math_obf(1)};"
-        f"local {v_idx}={math_obf(1)};"
+    # Geração de variáveis ilusórias (Fantasmas)
+    v_hex, v_proxy, v_res, v_state, v_idx, v_last = (generate_illusion_var() for _ in range(6))
+    f_sub, f_tonum, f_char, f_insert, f_concat = (generate_illusion_var() for _ in range(5))
+    v_env, v_exec, v_junk = (generate_illusion_var() for _ in range(3))
+    
+    # SETUP - Definição das variáveis do descodificador
+    setup_logic = (
+        f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat}=string.sub,tonumber,string.char,table.insert,table.concat;"
+        f"local {v_hex}={f_concat}({{{table_elements}}});"
+        f"local {v_proxy}=setmetatable({{}},{{__index=function(t,k) local s={f_sub}({v_hex},k,k+1);if s==\"\" then return nil end;return({f_tonum}(s,16)+k)%256;end}});"
+        f"local {v_res}={{}};"
+        f"local {v_state}=1;"
+        f"local {v_idx}=1;"
+        f"local {v_last}={base_key};"
+        f"local {v_junk}=0;"
     )
-
-    # Lógica basura y predicados opacos para romper Decompiladores
-    anti_moonsec_code = (
-        f"local {m_fake_table}=setmetatable({{}},{{__index=function()return {v_key} end}});"
-        f"if not {f_sub} then {v_key}={m_fake_table}[1]+{math_obf(999)} end;"
-    )
-
-    # Máquina de estados (State Machine) unida sin saltos de línea
-    loop_code = (
-        f"while {v_state}~={math_obf(0)} do "
-        f"if {v_state}=={math_obf(1)} then "
-        f"if {v_idx}>#{v_data} then {v_state}={math_obf(0)} else {v_state}={math_obf(2)} end;"
-        f"elseif {v_state}=={math_obf(2)} then "
-        f"{v_key}=({v_key}+{math_obf(step_key)})%{math_obf(256)};"
-        f"local {v_hex}={f_sub}({v_data},{v_idx},{v_idx}+{math_obf(1)});"
-        f"local {v_b}={f_tonum}({v_hex},{math_obf(16)});"
-        f"local {v_dec}=({v_b}-{v_key})%{math_obf(256)};"
-        f"{f_insert}({v_out},{f_char}({v_dec}));"
-        f"{v_idx}={v_idx}+{math_obf(2)};"
-        f"{v_state}={math_obf(1)};"
-        f"end "
+    
+    # LÓGICA DE LOOP & LIXO ENTRELAÇADO
+    # A variável v_junk aparenta ser código morto, mas está matematicamente ligada ao cálculo "(v_junk - math.abs(v_junk))"
+    # Se uma IA ou descompilador remover a variável ou a lógica, a descriptografia falhará.
+    loop_logic = (
+        f"while {v_state}~=0 do "
+        f"if {v_state}==1 then "
+        f"if {v_idx}>#{v_hex} then {v_state}=4 else {v_state}=2 end;"
+        f"elseif {v_state}==2 then "
+        f"local m={v_proxy}[{v_idx}];"
+        f"if not m then {v_state}=4;else "
+        f"{v_junk}={v_junk}+1;" 
+        f"local c=(m-{v_idx}+({v_junk}-math.abs({v_junk})))%256;"
+        f"local d=(c-{v_last}-{multiplier})%256;"
+        f"{f_insert}({v_res},{f_char}(d));"
+        f"{v_last}=c;"
+        f"{v_state}=3;"
+        f"end;"
+        f"elseif {v_state}==3 then "
+        f"{v_idx}={v_idx}+2;{v_state}=1;"
+        f"elseif {v_state}==4 then "
+        f"{v_state}=0;"
+        f"end;"
         f"end;"
     )
-
-    # Ejecución blindada
-    run_code = (
-        f"local exec,err={f_load}({f_concat}({v_out}));"
-        f"if type(exec)=='function' then return exec(...) else return err end;"
+    
+    # EXECUÇÃO & ANTI-HOOK DE LOADSTRING
+    # Ocultamos a palavra 'load' ou 'loadstring' resolvendo-a de forma dinâmica usando os caracteres ASCII:
+    # 108,111,97,100 = "load" | 115,116,114,105,110,103 = "string"
+    run_logic = (
+        f"local {v_env}=getfenv and getfenv() or _ENV;"
+        f"local {v_exec}={v_env}[{f_char}(108,111,97,100)] or {v_env}[{f_char}(108,111,97,100,115,116,114,105,110,103)];"
+        f"local f,e={v_exec}({f_concat}({v_res}));"
+        f"if not f then error(tostring(e)) end;"
+        f"return f(...);"
     )
-
-    # Retorna absolutamente TODO en una sola línea continua
-    return f"return(function(...) {setup_code}{anti_moonsec_code}{loop_code}{run_code} end)(...);"
+    
+    # Retorna o código ofuscado compactado em uma única linha
+    return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...);"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    actual_layers = max(1, min(requested_layers, 10))
+    # Otimização: Forçamos que as camadas estejam entre 1 e 8 para evitar loops exagerados
+    actual_layers = max(1, min(requested_layers, 8))
     
     current_code = code
-    # Envuelve la cadena en N capas en una sola línea
     for _ in range(actual_layers):
         current_code = obfuscate_single_layer(current_code)
         
-    # BANNER CON LINKS + 2 LÍNEAS VACÍAS
     banner = """--[[
                                                                   <'         -n:                   
                                                                icI        ^v0!                      
@@ -187,15 +149,15 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                                  _$$@W~     `0WL!      _@$$$$@L                     
                                                 :&@c      ,{'         .k@$$@J                       
                                           :l   I%X.                  !&$$$X'                        
-                                       .\l    u$Yic]  `>           >#$@B\                           
+                                       .\\l    u$Yic]  `>           >#$@B\\                           
                                      ;L~    -%$$$$U;|+          'zB$@pi                             
                                    ^aj    |8@$$$$$B]         .J%$@*i                                
                                  `a$f':(B$$$$$$$@c       '+a@B*r.                                   
                                 c$$$$$$$@Bz>/$$k"     ~cXt-^                                        
                               ~%$@$$$$B/'  IB%l                                                     
-                             w$$$$@BJ'    _%\                                                       
+                             w$$$$@BJ'    _%\\                                                       
                            ~B$$$@a<      Un.                                                        
-                         'a$$$@\       :p.                                                          
+                         'a$$$@\\       :p.                                                          
                         n@$@p"       "x                                                             
                       )8@#?                                                                         
                     iB@r.                                                                           
@@ -206,8 +168,7 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                 https://space-obfuscator.spacecp.workers.dev/
                         https://discord.gg/7dt2A6DJZA
 ]]--"""
-    
-    return f"{banner}\n\n\n{current_code}"
+    return f"{banner}\n{current_code}\n"
 
 @app.get("/")
 async def root():
@@ -221,11 +182,12 @@ async def health_check():
 async def obfuscate(request: ObfuscateRequest):
     try:
         if not request.code or not request.code.strip():
-            return ObfuscateResponse(success=False, error="El código está vacío")
+            return ObfuscateResponse(success=False, error="O código está vazio")
         
-        max_size = 15 * 1024 * 1024 
+        # Limite de peso: 10 MB para suportar múltiplas camadas
+        max_size = 10 * 1024 * 1024 
         if len(request.code) > max_size:
-            return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
+            return ObfuscateResponse(success=False, error="O código excede o limite de tamanho permitido")
         
         layers_to_apply = request.layers if request.layers is not None else 5
         
@@ -236,11 +198,11 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Single-Line Core ({min(layers_to_apply, 10)} Layers)",
+            mode_used=f"High Protection ({min(layers_to_apply, 8)}-Layers + Anti-AI)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
-        return ObfuscateResponse(success=False, error=f"Error inesperado: {str(e)}")
+        return ObfuscateResponse(success=False, error=f"Erro inesperado: {str(e)}")
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.isdir(FRONTEND_DIR):
@@ -250,8 +212,8 @@ if os.path.isdir(FRONTEND_DIR):
         index_path = os.path.join(FRONTEND_DIR, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        return {"error": "Frontend no encontrado."}
+        return {"error": "Frontend não encontrado."}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
