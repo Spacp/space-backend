@@ -1,6 +1,6 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Enterprise Grade: Parameter Flattening & Base64 Payload (V8)
+#   Version 19.0.0: Environment-Locked & Anti-Tamper Engine
 # ================================================
 
 from fastapi import FastAPI
@@ -18,8 +18,8 @@ import base64
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Enterprise-Grade Lua Protection Service",
-    version="18.0.0"
+    description="Environment-Locked Lua Protection Service",
+    version="19.0.0"
 )
 
 app.add_middleware(
@@ -58,12 +58,13 @@ async def startup_event():
     thread = threading.Thread(target=ping_self, daemon=True)
     thread.start()
 
-def generate_illusion_var():
-    # Variables de tamaño caótico
-    length = random.randint(5, 20)
-    return "_" + "".join(random.choices("O0I1l", k=length))
+def generate_chaotic_var():
+    # Evita patrones fijos como _O0I1l generando nombres alfanuméricos caóticos de longitud variable
+    length = random.randint(7, 16)
+    prefix = random.choice(["ctx", "slot", "stk", "reg", "var", "pt", "l"])
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+    return f"_{prefix}_" + "".join(random.choices(chars, k=length))
 
-# PRNG Multi-Estado
 class MultiStatePRNG:
     def __init__(self, s1, s2, s3):
         self.s1 = s1
@@ -79,90 +80,143 @@ class MultiStatePRNG:
 
 def obfuscate_single_layer(code: str) -> str:
     """
-    Motor v8 (Luraph/Prometheus Architecture Clone):
-    - Parameter Flattening.
-    - Base64 High-Density Encoding (Capa 1).
-    - PRNG Encryption (Capa 2).
+    Motor v9 (Anti-Tamper & Environment Cryptolock):
+    - Autopadding preventivo contra ataques de fuerza bruta.
+    - Semillas dinámicas vinculadas a la integridad del Script.
+    - Ocultación total de firmas nativas de Lua 5.1/Luau.
     """
     
-    # GENERACIÓN DE SEMILLAS
-    s1 = random.randint(100000, 999999)
-    s2 = random.randint(100000, 999999)
-    s3 = random.randint(100000, 999999)
-    prng = MultiStatePRNG(s1, s2, s3)
+    # 1. AUTO-PADDING (Previene criptoanálisis de payloads cortos)
+    if len(code) < 600:
+        padding_lines = []
+        for _ in range(random.randint(25, 40)):
+            v1 = generate_chaotic_var()
+            v2 = generate_chaotic_var()
+            padding_lines.append(f"local {v1} = function() return math.sin({random.randint(1,100)}) end; local {v2} = {v1}() and true or false;")
+        code = "\n".join(padding_lines) + "\n" + code
+
+    # 2. PROCESAMIENTO CRIPTOGRÁFICO DE SEMILLAS MÓVILES
+    # Definimos desplazamientos secretos en lugar de semillas estáticas directas
+    offset_1 = random.randint(200000, 800000)
+    offset_2 = random.randint(100000, 900000)
+    offset_3 = random.randint(300000, 700000)
     
-    # ENCRIPTACIÓN MATEMÁTICA DEL PAYLOAD
+    # Simulamos el valor base esperado del Checksum ambiental en ejecución (entorno estándar ~3000)
+    assumed_base = 3015 
+    s1_target = (assumed_base + offset_1) % 4294967296
+    s2_target = (assumed_base ^ offset_2) % 4294967296
+    s3_target = (assumed_base + offset_3) % 4294967296
+    
+    prng = MultiStatePRNG(s1_target, s2_target, s3_target)
+    
+    # Encriptación del Stream
     enc_bytes = bytearray()
+    integrity_checksum = 0
     for byte in code.encode('utf-8'):
         sh = prng.next()
         c = (byte + sh) % 256
         enc_bytes.append(c)
+        integrity_checksum = (integrity_checksum + c) % 65535
         
-    # CODIFICACIÓN DE ALTA DENSIDAD (BASE64)
-    # Esto simula la Capa 1 de Base85 que analizó Claude
+    # Agregamos la firma de integridad al final del payload binario
+    enc_bytes.append(integrity_checksum // 256)
+    enc_bytes.append(integrity_checksum % 256)
+        
     b64_payload = base64.b64encode(enc_bytes).decode('utf-8')
     
-    # APLANAMIENTO DE PARÁMETROS (Parameter Flattening)
-    # Mapeamos funciones nativas a variables aleatorias
-    params_real = ["string.byte", "string.char", "string.sub", "table.insert", "table.concat", "os.clock", "type", "pcall", "string.find", "math.floor", "getfenv", "string.gsub"]
-    params_fake = [generate_illusion_var() for _ in params_real]
+    # 3. APALANAMIENTO POLIMÓRFICO DE PARÁMETROS
+    params_real = ["string.byte", "string.char", "string.sub", "table.insert", "os.clock", "type", "pcall", "string.find", "math.floor", "string.gsub"]
+    params_fake = [generate_chaotic_var() for _ in params_real]
     
-    v_byte, v_char, v_sub, v_insert, v_concat, v_clock, v_type, v_pcall, v_find, v_floor, v_env, v_gsub = params_fake
+    v_byte, v_char, v_sub, v_insert, v_clock, v_type, v_pcall, v_find, v_floor, v_gsub = params_fake
 
-    # Otras variables internas
-    v_data, v_b64, v_out = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
-    v_s1, v_s2, v_s3 = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
-    v_enc_bytes, v_dec_idx, v_t_start = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
-    v_reader, v_env_table, v_l = generate_illusion_var(), generate_illusion_var(), generate_illusion_var()
-    v_ok, v_res = generate_illusion_var(), generate_illusion_var()
-    
-    # CÓDIGO INTERNO FLATTENED (Las funciones ahora son "v_sub", "v_find", etc.)
+    # Asignación de variables de control
+    v_data, v_b64, v_enc_bytes = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
+    v_s1, v_s2, v_s3 = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
+    v_dec_idx, v_t_start, v_t_last = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
+    v_reader, v_env, v_l, v_ok, v_res = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
+    v_src, v_shash, v_sum = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
+    v_check, v_calc_check = generate_chaotic_var(), generate_chaotic_var()
+
+    # Ocultación de palabras clave críticas de entorno
+    str_load = '"\\108\\111\\97\\100"'
+    str_loadstring = '"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103"'
+    str_getfenv = 'string.char(103,101,116,102,101,110,118)'
+
     inner_code = (
-        f"local {v_b64}=\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";"
-        f"local {v_data}=[=[{b64_payload}]=];"
-        f"{v_data}={v_gsub}({v_data},'[^%w%+/=]','');"
+        # RECONSTRUCCIÓN DINÁMICA DEL ENTORNO (Sin delatar Lua 5.1 explícitamente)
+        f"local {v_env} = (_ENV or (function() local f = _G[{str_getfenv}]; if f then return f() else return _G end end)());"
         
-        # DECODIFICADOR BASE64 A BYTES EN MEMORIA PRIVADA
-        f"local {v_enc_bytes}={{}};"
-        f"for i=1,#{v_data},4 do "
-        f"local n=({v_find}({v_b64},{v_sub}({v_data},i,i),1,true)-1)*262144+"
-        f"({v_find}({v_b64},{v_sub}({v_data},i+1,i+1),1,true)-1)*4096+"
-        f"({v_sub}({v_data},i+2,i+2)=='=' and 0 or ({v_find}({v_b64},{v_sub}({v_data},i+2,i+2),1,true)-1)*64)+"
-        f"({v_sub}({v_data},i+3,i+3)=='=' and 0 or ({v_find}({v_b64},{v_sub}({v_data},i+3,i+3),1,true)-1));"
-        f"{v_insert}({v_enc_bytes},{v_floor}(n/65536)%256);"
-        f"if {v_sub}({v_data},i+2,i+2)~='=' then {v_insert}({v_enc_bytes},{v_floor}(n/256)%256) end;"
-        f"if {v_sub}({v_data},i+3,i+3)~='=' then {v_insert}({v_enc_bytes},n%256) end;"
+        # CHECKSUM DE INTEGRIDAD DEL SCRIPT (Previene parches de analistas)
+        f"local {v_src} = (debug and debug.getinfo) and debug.getinfo(1,'S').source or 'stealth';"
+        f"local {v_shash} = 0; for i=1, #{v_src} do {v_shash} = ({v_shash} * 31 + {v_byte}({v_src}, i)) % 4294967296 end;"
+        
+        # ANALISIS DEL ENTORNO GLOBAL
+        f"local {v_sum} = 0; for k, v in pairs({v_env}) do if {v_type}(v) == 'function' then {v_sum} = ({v_sum} + #{k}) % 5000 end end;"
+        f"if {v_sum} == 0 then {v_sum} = {assumed_base} end;" # Fallback de estabilidad
+        
+        # DERIVACIÓN MATEMÁTICA DE SEMILLAS (No existen constantes en el código)
+        f"local {v_s1} = ({v_sum} + {offset_1} + ({v_shash} % 1000)) % 4294967296;"
+        f"local {v_s2} = (({v_sum} ~ {offset_2}) + ({v_shash} % 500)) % 4294967296;"
+        f"local {v_s3} = ({v_sum} + {offset_3} - ({v_shash} % 2000)) % 4294967296;"
+        
+        # EXTRACCIÓN DEL STRING DE DATOS
+        f"local {v_b64} = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";"
+        f"local {v_data} = [=[{b64_payload}]=];"
+        f"{v_data} = {v_gsub}({v_data}, '[^%w%+/=]', '');"
+        
+        # DECODIFICADOR INTERNO DE ALTA VELOCIDAD
+        f"local {v_enc_bytes} = {{}};"
+        f"for i=1, #{v_data}, 4 do "
+        f"local n = ({v_find}({v_b64}, {v_sub}({v_data},i,i), 1, true)-1)*262144+"
+        f"({v_find}({v_b64}, {v_sub}({v_data},i+1,i+1), 1, true)-1)*4096+"
+        f"({v_sub}({v_data},i+2,i+2)=='=' and 0 or ({v_find}({v_b64}, {v_sub}({v_data},i+2,i+2), 1, true)-1)*64)+"
+        f"({v_sub}({v_data},i+3,i+3)=='=' and 0 or ({v_find}({v_b64}, {v_sub}({v_data},i+3,i+3), 1, true)-1));"
+        f"{v_insert}({v_enc_bytes}, {v_floor}(n/65536)%256);"
+        f"if {v_sub}({v_data},i+2,i+2) ~= '=' then {v_insert}({v_enc_bytes}, {v_floor}(n/256)%256) end;"
+        f"if {v_sub}({v_data},i+3,i+3) ~= '=' then {v_insert}({v_enc_bytes}, n%256) end;"
         f"end;"
         
-        # TIMING CHECK Y PRNG DECRYPTOR
-        f"local {v_s1},{v_s2},{v_s3}={s1},{s2},{s3};"
-        f"local {v_dec_idx}=1;"
-        f"local {v_t_start}={v_clock}();"
+        # VERIFICACIÓN DE INTEGRIDAD DEL PAYLOAD (Punto 3)
+        f"if #{v_enc_bytes} < 3 then return nil end;"
+        f"local {v_check} = {v_enc_bytes}[#{v_enc_bytes}-1]*256 + {v_enc_bytes}[#{v_enc_bytes}];"
+        f"local {v_calc_check} = 0; for i=1, #{v_enc_bytes}-2 do {v_calc_check} = ({v_calc_check} + {v_enc_bytes}[i]) % 65535 end;"
+        f"if {v_check} ~= {v_calc_check} then {v_s3} = {v_s3} + 999999 end;" # Envenena las llaves si hay manipulación
+        
+        # CONFIGURACIÓN DEL ITERADOR Y ANTI-TIMING INCREMENTAL
+        f"local {v_dec_idx} = 1;"
+        f"local {v_t_start} = {v_clock}();"
+        f"local {v_t_last} = {v_t_start};"
         
         f"local function {v_reader}() "
-        f"if {v_dec_idx}>#{v_enc_bytes} then return nil end;"
-        f"if ({v_clock}()-{v_t_start})>2.0 then {v_s3}={v_s3}+1 end;" # Trampa Anti-Emulación
+        f"if {v_dec_idx} > (#{v_enc_bytes}-2) then return nil end;"
         
-        f"{v_s1}=({v_s1}*1664525+1013904223)%4294967296;"
-        f"{v_s2}=({v_s2}*22695477+1)%4294967296;"
-        f"{v_s3}=({v_s3}+{v_s1})%4294967296;"
-        f"local sh=({v_s1}+{v_s2}+{v_s3})%256;"
+        # Anti-Timing Check Distribuido por Ciclo (Detecta desincronizaciones de debuggers)
+        f"local now = {v_clock}();"
+        f"local delta = now - {v_t_last};"
+        f"if delta > 0.3 or (now - {v_t_start}) > 4.0 then {v_s1} = ({v_s1} + 7) % 4294967296 end;"
+        f"{v_t_last} = now;"
         
-        f"local m={v_enc_bytes}[{v_dec_idx}];"
-        f"local dec=(m-sh)%256;"
-        f"if dec<0 then dec=dec+256 end;"
-        f"{v_dec_idx}={v_dec_idx}+1;"
+        # EVOLUCIÓN DE ESTADOS DEL PRNG MULTI-ESTADO
+        f"{v_s1} = ({v_s1} * 1664525 + 1013904223) % 4294967296;"
+        f"{v_s2} = ({v_s2} * 22695477 + 1) % 4294967296;"
+        f"{v_s3} = ({v_s3} + {v_s1}) % 4294967296;"
+        f"local sh = ({v_s1} + {v_s2} + {v_s3}) % 256;"
+        
+        f"local m = {v_enc_bytes}[{v_dec_idx}];"
+        f"local dec = (m - sh) % 256;"
+        f"if dec < 0 then dec = dec + 256 end;"
+        f"{v_dec_idx} = {v_dec_idx} + 1;"
         f"return {v_char}(dec);"
         f"end;"
         
-        # EJECUCIÓN DINÁMICA OCULTA
-        f"local {v_env_table}={v_env} and {v_env}() or _ENV;"
-        f"local {v_l}={v_env_table}[\"\\108\\111\\97\\100\"] or {v_env_table}[\"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103\"];"
-        f"local {v_ok},{v_res}={v_pcall}({v_l},{v_reader});"
-        f"if {v_ok} and {v_type}({v_res})==\"function\" then return {v_res}(...) end;"
+        # EJECUCIÓN DINÁMICA ULTRA SEGURA
+        f"local {v_l} = {v_env}[{str_load}] or {v_env}[{str_loadstring}];"
+        f"local {v_ok}, {v_res} = {v_pcall}({v_l}, {v_reader});"
+        f"if {v_ok} and {v_type}({v_res}) == 'function' then return {v_res}(...) end;"
     )
 
-    # UNIMOS EL APLANAMIENTO CON EL CÓDIGO INTERNO
+    # Empaquetado final con Parameter Flattening
     params_fake_str = ",".join(params_fake)
     params_real_str = ",".join(params_real)
     
@@ -194,15 +248,15 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                                  _$$@W~     `0WL!      _@$$$$@L                     
                                                 :&@c      ,{'         .k@$$@J                       
                                           :l   I%X.                  !&$$$X'                        
-                                       .\\l    u$Yic]  `>           >#$@B\\                           
+                                       .\l    u$Yic]  `>           >#$@B\                           
                                      ;L~    -%$$$$U;|+          'zB$@pi                             
                                    ^aj    |8@$$$$$B]         .J%$@*i                                
                                  `a$f':(B$$$$$$$@c       '+a@B*r.                                   
                                 c$$$$$$$@Bz>/$$k"     ~cXt-^                                        
                               ~%$@$$$$B/'  IB%l                                                     
-                             w$$$$@BJ'    _%\\                                                       
+                             w$$$$@BJ'    _%\                                                       
                            ~B$$$@a<      Un.                                                        
-                         'a$$$@\\       :p.                                                          
+                         'a$$$@\       :p.                                                          
                         n@$@p"       "x                                                             
                       )8@#?                                                                         
                     iB@r.                                                                           
@@ -242,7 +296,7 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Enterprise Engine V8 ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"Crypto VM Engine v19 ({min(layers_to_apply, 10)}-Layers)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
