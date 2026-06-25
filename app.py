@@ -1,9 +1,9 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Version 19.0.2: Environment-Locked Engine (Bulletproof Syntax Hotfix)
+#   Version 19.0.3: Environment-Locked Engine + Async Load Balancer
 # ================================================
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -15,11 +15,13 @@ import random
 import urllib.request
 import threading
 import base64
+import time
+import asyncio
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
     description="Environment-Locked Lua Protection Service",
-    version="19.0.2"
+    version="19.0.3"
 )
 
 app.add_middleware(
@@ -45,7 +47,6 @@ class ObfuscateResponse(BaseModel):
     timestamp: str = ""
 
 def ping_self():
-    import time
     while True:
         try:
             urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
@@ -62,7 +63,6 @@ def generate_chaotic_var():
     length = random.randint(7, 16)
     prefix = random.choice(["ctx", "slot", "stk", "reg", "var", "pt", "l"])
     chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-    # Cambiado a list comprehension para evitar errores de sintaxis "k=" en versiones antiguas de Python
     return "_" + prefix + "_" + "".join([random.choice(chars) for _ in range(length)])
 
 class MultiStatePRNG:
@@ -130,7 +130,6 @@ def obfuscate_single_layer(code: str) -> str:
     str_loadstring = '"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103"'
     str_getfenv = 'string.char(103,101,116,102,101,110,118)'
 
-    # Todo construido con concatenación estándar (+) para evitar el bug f-string y la caché de Python
     inner_code = (
         "local " + v_env + " = (_ENV or (function() local f = _G[" + str_getfenv + "]; if f then return f() else return _G end end)());\n"
         "local " + v_src + " = (debug and debug.getinfo) and debug.getinfo(1,'S').source or 'stealth';\n"
@@ -251,19 +250,33 @@ async def root():
 async def health_check():
     return {"status": "ok"}
 
+# Diccionario en memoria para rastrear IPs y limitar spam
+user_requests = {}
+
 @app.post("/api/obfuscate", response_model=ObfuscateResponse)
-async def obfuscate(request: ObfuscateRequest):
+async def obfuscate(request: ObfuscateRequest, fastapi_req: Request):
     try:
+        # ANTI-SPAM BÁSICO: Limita a 1 petición cada 3 segundos por IP
+        client_ip = fastapi_req.client.host
+        current_time = time.time()
+        
+        if client_ip in user_requests:
+            if current_time - user_requests[client_ip] < 3.0:
+                return ObfuscateResponse(success=False, error="Por favor, espera unos segundos entre cada ofuscación.")
+        user_requests[client_ip] = current_time
+
         if not request.code or not request.code.strip():
             return ObfuscateResponse(success=False, error="El código está vacío")
         
-        max_size = 15 * 1024 * 1024 
+        # Límite de 5MB para no reventar la memoria RAM del servidor
+        max_size = 5 * 1024 * 1024 
         if len(request.code) > max_size:
-            return ObfuscateResponse(success=False, error="El código excede el límite permitido")
+            return ObfuscateResponse(success=False, error="El código excede el límite permitido (5MB)")
         
         layers_to_apply = request.layers if request.layers is not None else 5
         
-        obfuscated = obfuscate_code(request.code, request.mode, layers_to_apply)
+        # MAGIA ASÍNCRONA: Envía el trabajo pesado a otro hilo (evita que se caiga la página para otros usuarios)
+        obfuscated = await asyncio.to_thread(obfuscate_code, request.code, request.mode, layers_to_apply)
         
         return ObfuscateResponse(
             success=True,
