@@ -1,9 +1,9 @@
 # ================================================
 #   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
-#   Version 19.0.3: Environment-Locked Engine + Async Load Balancer
+#   Servidor FastAPI (Anti-AI Metatable Virtualization)
 # ================================================
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -12,16 +12,11 @@ from typing import Optional
 from datetime import datetime
 import os
 import random
-import urllib.request
-import threading
-import base64
-import time
-import asyncio
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Environment-Locked Lua Protection Service",
-    version="19.0.3"
+    description="Anti-AI Lua Protection Service",
+    version="10.2.0"
 )
 
 app.add_middleware(
@@ -35,7 +30,7 @@ app.add_middleware(
 class ObfuscateRequest(BaseModel):
     code: str
     mode: str = "heavy"
-    layers: Optional[int] = 5
+    layers: Optional[int] = 5  # Recibe el número exacto del frontend
 
 class ObfuscateResponse(BaseModel):
     success: bool
@@ -46,158 +41,111 @@ class ObfuscateResponse(BaseModel):
     mode_used: str = ""
     timestamp: str = ""
 
-def ping_self():
-    while True:
-        try:
-            urllib.request.urlopen("http://127.0.0.1:8000/api/health", timeout=5)
-        except:
-            pass
-        time.sleep(600)
+# OPTIMIZACIÓN: random.choices es mucho más rápido y ligero en memoria para Python
+def generate_illusion_var(length=14):
+    return "_" + "".join(random.choices("O0I1l", k=length))
 
-@app.on_event("startup")
-async def startup_event():
-    thread = threading.Thread(target=ping_self, daemon=True)
-    thread.start()
-
-def generate_chaotic_var():
-    length = random.randint(7, 16)
-    prefix = random.choice(["ctx", "slot", "stk", "reg", "var", "pt", "l"])
-    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-    return "_" + prefix + "_" + "".join([random.choice(chars) for _ in range(length)])
-
-class MultiStatePRNG:
-    def __init__(self, s1, s2, s3):
-        self.s1 = s1
-        self.s2 = s2
-        self.s3 = s3
-        self.m = 4294967296
-
-    def next(self):
-        self.s1 = (self.s1 * 1664525 + 1013904223) % self.m
-        self.s2 = (self.s2 * 22695477 + 1) % self.m
-        self.s3 = (self.s3 + self.s1) % self.m
-        return (self.s1 + self.s2 + self.s3) % 256
+def generate_anti_ai_junk() -> str:
+    junk = ""
+    # Genera scripts basura dinámicos para confundir descompiladores
+    for _ in range(random.randint(1, 2)):
+        v1, v2, v3, v4 = generate_illusion_var(12), generate_illusion_var(12), generate_illusion_var(14), generate_illusion_var(6)
+        
+        junk += (
+            f"local {v1} = {random.randint(100, 9999)}; "
+            f"local {v2} = function({v3}) "
+            f"  local {v1} = {v3} and {random.randint(10, 50)}; "
+            f"  for {v4} = 1, {random.randint(3, 8)} do "
+            f"    {v1} = ({v1} or 0) + {random.randint(1, 5)}; "
+            f"  end "
+            f"  return {v1}; "
+            f"end; "
+            f"if {v2}({v1}) == -99999 then "
+            f"  local {v3} = setmetatable({{}}, {{__index = function(t,k) return k end}}); "
+            f"  {v1} = {v3}[{random.randint(1, 100)}]; "
+            f"end; "
+        )
+    return junk
 
 def obfuscate_single_layer(code: str) -> str:
-    # 1. AUTO-PADDING
-    if len(code) < 600:
-        padding_lines = []
-        for _ in range(random.randint(25, 40)):
-            v1 = generate_chaotic_var()
-            v2 = generate_chaotic_var()
-            padding_lines.append("local " + v1 + " = function() return math.sin(" + str(random.randint(1,100)) + ") end; local " + v2 + " = " + v1 + "() and true or false;")
-        code = "\n".join(padding_lines) + "\n" + code
-
-    # 2. PROCESAMIENTO CRIPTOGRÁFICO DE SEMILLAS
-    offset_1 = random.randint(200000, 800000)
-    offset_2 = random.randint(100000, 900000)
-    offset_3 = random.randint(300000, 700000)
+    """
+    Aplica una capa de ofuscación utilizando virtualización por tabla balanceada.
+    """
+    base_key = random.randint(20, 180)
+    multiplier = random.randint(3, 9)
     
-    assumed_base = 3015 
-    s1_target = (assumed_base + offset_1) % 4294967296
-    s2_target = (assumed_base ^ offset_2) % 4294967296
-    s3_target = (assumed_base + offset_3) % 4294967296
-    
-    prng = MultiStatePRNG(s1_target, s2_target, s3_target)
-    
-    enc_bytes = bytearray()
-    integrity_checksum = 0
+    # Cifrado de bytes
+    encoded_bytes = bytearray()
+    last_val = base_key
     for byte in code.encode('utf-8'):
-        sh = prng.next()
-        c = (byte + sh) % 256
-        enc_bytes.append(c)
-        integrity_checksum = (integrity_checksum + c) % 65535
+        cipher_byte = (byte + last_val + multiplier) % 256
+        encoded_bytes.append(cipher_byte)
+        last_val = cipher_byte
         
-    enc_bytes.append(integrity_checksum // 256)
-    enc_bytes.append(integrity_checksum % 256)
-        
-    b64_payload = base64.b64encode(enc_bytes).decode('utf-8')
+    encoded_hex = encoded_bytes.hex()
     
-    # 3. APLANAMIENTO POLIMÓRFICO DE PARÁMETROS
-    params_real = ["string.byte", "string.char", "string.sub", "table.insert", "os.clock", "type", "pcall", "string.find", "math.floor", "string.gsub"]
-    params_fake = [generate_chaotic_var() for _ in params_real]
+    # Fragmentación segura en tablas para evitar colapso de registros de Lua (Error 255)
+    chunk_size = 2000 
+    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
+    table_elements = ", ".join(f'"{c}"' for c in chunks)
     
-    v_byte, v_char, v_sub, v_insert, v_clock, v_type, v_pcall, v_find, v_floor, v_gsub = params_fake
-
-    v_data, v_b64, v_enc_bytes = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
-    v_s1, v_s2, v_s3 = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
-    v_dec_idx, v_t_start, v_t_last = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
-    v_reader, v_env, v_l, v_ok, v_res = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
-    v_src, v_shash, v_sum = generate_chaotic_var(), generate_chaotic_var(), generate_chaotic_var()
-    v_check, v_calc_check = generate_chaotic_var(), generate_chaotic_var()
-
-    str_load = '"\\108\\111\\97\\100"'
-    str_loadstring = '"\\108\\111\\97\\100\\115\\116\\114\\105\\110\\103"'
-    str_getfenv = 'string.char(103,101,116,102,101,110,118)'
-
-    inner_code = (
-        "local " + v_env + " = (_ENV or (function() local f = _G[" + str_getfenv + "]; if f then return f() else return _G end end)());\n"
-        "local " + v_src + " = (debug and debug.getinfo) and debug.getinfo(1,'S').source or 'stealth';\n"
-        "local " + v_shash + " = 0; for i=1, #" + v_src + " do " + v_shash + " = (" + v_shash + " * 31 + " + v_byte + "(" + v_src + ", i)) % 4294967296 end;\n"
-        
-        "local " + v_sum + " = 0; for _k, _v in pairs(" + v_env + ") do if " + v_type + "(_v) == 'function' then " + v_sum + " = (" + v_sum + " + #_k) % 5000 end end;\n"
-        "if " + v_sum + " == 0 then " + v_sum + " = " + str(assumed_base) + " end;\n"
-        
-        "local " + v_s1 + " = (" + v_sum + " + " + str(offset_1) + " + (" + v_shash + " % 1000)) % 4294967296;\n"
-        "local " + v_s2 + " = ((" + v_sum + " ~ " + str(offset_2) + ") + (" + v_shash + " % 500)) % 4294967296;\n"
-        "local " + v_s3 + " = (" + v_sum + " + " + str(offset_3) + " - (" + v_shash + " % 2000)) % 4294967296;\n"
-        
-        "local " + v_b64 + " = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\";\n"
-        "local " + v_data + " = [=[" + b64_payload + "]=];\n"
-        v_data + " = " + v_gsub + "(" + v_data + ", '[^%w%+/=]', '');\n"
-        
-        "local " + v_enc_bytes + " = {};\n"
-        "for i=1, #" + v_data + ", 4 do\n"
-        "  local n = (" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i,i), 1, true)-1)*262144+"
-        "(" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i+1,i+1), 1, true)-1)*4096+"
-        "(" + v_sub + "(" + v_data + ",i+2,i+2)=='=' and 0 or (" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i+2,i+2), 1, true)-1)*64)+"
-        "(" + v_sub + "(" + v_data + ",i+3,i+3)=='=' and 0 or (" + v_find + "(" + v_b64 + ", " + v_sub + "(" + v_data + ",i+3,i+3), 1, true)-1));\n"
-        "  " + v_insert + "(" + v_enc_bytes + ", " + v_floor + "(n/65536)%256);\n"
-        "  if " + v_sub + "(" + v_data + ",i+2,i+2) ~= '=' then " + v_insert + "(" + v_enc_bytes + ", " + v_floor + "(n/256)%256) end;\n"
-        "  if " + v_sub + "(" + v_data + ",i+3,i+3) ~= '=' then " + v_insert + "(" + v_enc_bytes + ", n%256) end;\n"
-        "end;\n"
-        
-        "if #" + v_enc_bytes + " < 3 then return nil end;\n"
-        "local " + v_check + " = " + v_enc_bytes + "[#" + v_enc_bytes + "-1]*256 + " + v_enc_bytes + "[#" + v_enc_bytes + "];\n"
-        "local " + v_calc_check + " = 0; for i=1, #" + v_enc_bytes + "-2 do " + v_calc_check + " = (" + v_calc_check + " + " + v_enc_bytes + "[i]) % 65535 end;\n"
-        "if " + v_check + " ~= " + v_calc_check + " then " + v_s3 + " = " + v_s3 + " + 999999 end;\n"
-        
-        "local " + v_dec_idx + " = 1;\n"
-        "local " + v_t_start + " = " + v_clock + "();\n"
-        "local " + v_t_last + " = " + v_t_start + ";\n"
-        
-        "local function " + v_reader + "()\n"
-        "  if " + v_dec_idx + " > (#" + v_enc_bytes + "-2) then return nil end;\n"
-        "  local now = " + v_clock + "();\n"
-        "  local delta = now - " + v_t_last + ";\n"
-        "  if delta > 0.3 or (now - " + v_t_start + ") > 4.0 then " + v_s1 + " = (" + v_s1 + " + 7) % 4294967296 end;\n"
-        "  " + v_t_last + " = now;\n"
-        
-        "  " + v_s1 + " = (" + v_s1 + " * 1664525 + 1013904223) % 4294967296;\n"
-        "  " + v_s2 + " = (" + v_s2 + " * 22695477 + 1) % 4294967296;\n"
-        "  " + v_s3 + " = (" + v_s3 + " + " + v_s1 + ") % 4294967296;\n"
-        "  local sh = (" + v_s1 + " + " + v_s2 + " + " + v_s3 + ") % 256;\n"
-        
-        "  local m = " + v_enc_bytes + "[" + v_dec_idx + "];\n"
-        "  local dec = (m - sh) % 256;\n"
-        "  if dec < 0 then dec = dec + 256 end;\n"
-        "  " + v_dec_idx + " = " + v_dec_idx + " + 1;\n"
-        "  return " + v_char + "(dec);\n"
-        "end;\n"
-        
-        "local " + v_l + " = " + v_env + "[" + str_load + "] or " + v_env + "[" + str_loadstring + "];\n"
-        "local " + v_ok + ", " + v_res + " = " + v_pcall + "(" + v_l + ", " + v_reader + ");\n"
-        "if " + v_ok + " and " + v_type + "(" + v_res + ") == 'function' then return " + v_res + "(...) end;\n"
+    # Generación de variables fantasma
+    v_hex, v_proxy, v_res, v_state, v_idx, v_last = (generate_illusion_var() for _ in range(6))
+    f_sub, f_tonum, f_char, f_insert, f_concat, f_load = (generate_illusion_var() for _ in range(6))
+    
+    junk_pre = generate_anti_ai_junk()
+    junk_post = generate_anti_ai_junk()
+    
+    setup_logic = (
+        f"{junk_pre} "
+        f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat},{f_load} = string.sub,tonumber,string.char,table.insert,table.concat,loadstring or load; "
+        f"local {v_hex} = {f_concat}({{{table_elements}}}); "
+        f"local {v_proxy} = setmetatable({{}}, {{ "
+        f"  __index = function(t, k) "
+        f"    local s_str = {f_sub}({v_hex}, k, k + 1); "
+        f"    if s_str == \"\" then return nil end; "
+        f"    return ({f_tonum}(s_str, 16) + k) % 256; "
+        f"  end "
+        f"}}); "
+        f"local {v_res} = {{}}; "
+        f"local {v_state} = 1; "
+        f"local {v_idx} = 1; "
+        f"local {v_last} = {base_key}; "
     )
-
-    params_fake_str = ",".join(params_fake)
-    params_real_str = ",".join(params_real)
     
-    wrapper = "return (function(" + params_fake_str + ")\n" + inner_code + "\nend)(" + params_real_str + ")"
-    return wrapper
+    loop_logic = (
+        f"while {v_state} ~= 0 do "
+            f"if {v_state} == 1 then "
+                f"if {v_idx} > #{v_hex} then {v_state} = 4 else {v_state} = 2 end; "
+            f"elseif {v_state} == 2 then "
+                f"local m_val = {v_proxy}[{v_idx}]; "
+                f"if not m_val then {v_state} = 4; else "
+                f"  local c_byte = (m_val - {v_idx}) % 256; "
+                f"  local dec_b = (c_byte - {v_last} - {multiplier}) % 256; "
+                f"  {f_insert}({v_res}, {f_char}(dec_b)); "
+                f"  {v_last} = c_byte; {v_state} = 3; "
+                f"end; "
+            f"elseif {v_state} == 3 then "
+                f"{v_idx} = {v_idx} + 2; {v_state} = 1; "
+            f"elseif {v_state} == 4 then "
+                f"{v_state} = 0; "
+            f"end "
+        f"end; "
+        f"{junk_post} "
+    )
+    
+    run_logic = (
+        f"local f, e = {f_load}({f_concat}({v_res})); "
+        f"if not f then error(tostring(e)) end; "
+        f"return f(...); "
+    )
+    
+    return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...)"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    actual_layers = max(1, min(requested_layers, 10))
+    # CORRECCIÓN: Toma las capas que pidió el usuario y las limita entre 1 y 8
+    # para evitar que saturen el servidor con peticiones infinitas.
+    actual_layers = max(1, min(requested_layers, 8))
     
     current_code = code
     for _ in range(actual_layers):
@@ -240,7 +188,7 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                 https://space-obfuscator.spacecp.workers.dev/
                         https://discord.gg/7dt2A6DJZA
 ]]--"""
-    return f"{banner}\n\n\n{current_code}"
+    return f"{banner}\n{current_code}\n"
 
 @app.get("/")
 async def root():
@@ -250,40 +198,28 @@ async def root():
 async def health_check():
     return {"status": "ok"}
 
-# Diccionario en memoria para rastrear IPs y limitar spam
-user_requests = {}
-
 @app.post("/api/obfuscate", response_model=ObfuscateResponse)
-async def obfuscate(request: ObfuscateRequest, fastapi_req: Request):
+async def obfuscate(request: ObfuscateRequest):
     try:
-        # ANTI-SPAM BÁSICO: Limita a 1 petición cada 3 segundos por IP
-        client_ip = fastapi_req.client.host
-        current_time = time.time()
-        
-        if client_ip in user_requests:
-            if current_time - user_requests[client_ip] < 3.0:
-                return ObfuscateResponse(success=False, error="Por favor, espera unos segundos entre cada ofuscación.")
-        user_requests[client_ip] = current_time
-
         if not request.code or not request.code.strip():
             return ObfuscateResponse(success=False, error="El código está vacío")
         
-        # Límite de 5MB para no reventar la memoria RAM del servidor
-        max_size = 5 * 1024 * 1024 
+        # Limite de peso: 10 MB (Suficiente para soportar múltiples capas)
+        max_size = 10 * 1024 * 1024 
         if len(request.code) > max_size:
-            return ObfuscateResponse(success=False, error="El código excede el límite permitido (5MB)")
+            return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
         
+        # Obtenemos las capas solicitadas desde el JSON del frontend
         layers_to_apply = request.layers if request.layers is not None else 5
         
-        # MAGIA ASÍNCRONA: Envía el trabajo pesado a otro hilo (evita que se caiga la página para otros usuarios)
-        obfuscated = await asyncio.to_thread(obfuscate_code, request.code, request.mode, layers_to_apply)
+        obfuscated = obfuscate_code(request.code, request.mode, layers_to_apply)
         
         return ObfuscateResponse(
             success=True,
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used=f"Crypto VM Engine v19 ({min(layers_to_apply, 10)}-Layers)",
+            mode_used=f"High Protection ({min(layers_to_apply, 8)}-Layers + Anti-AI)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
@@ -301,4 +237,4 @@ if os.path.isdir(FRONTEND_DIR):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
