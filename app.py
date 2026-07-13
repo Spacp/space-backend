@@ -1,6 +1,6 @@
 # ================================================
-#   SPACE OBFUSCATOR - Backend Server (One-Line VM)
-#   Servidor FastAPI (Anti-AI & Single-Line Output)
+#   SPACE OBFUSCATOR - Backend Server (Ultra Optimized)
+#   Servidor FastAPI (Anti-AI Metatable Virtualization)
 # ================================================
 
 from fastapi import FastAPI
@@ -15,8 +15,8 @@ import random
 
 app = FastAPI(
     title="SPACE OBFUSCATOR API",
-    description="Anti-AI Lua Protection Service - One Line Edition",
-    version="11.5.0"
+    description="Anti-AI Lua Protection Service",
+    version="10.2.0"
 )
 
 app.add_middleware(
@@ -30,7 +30,7 @@ app.add_middleware(
 class ObfuscateRequest(BaseModel):
     code: str
     mode: str = "heavy"
-    layers: Optional[int] = 5
+    layers: Optional[int] = 5  # Recibe el número exacto del frontend
 
 class ObfuscateResponse(BaseModel):
     success: bool
@@ -41,47 +41,116 @@ class ObfuscateResponse(BaseModel):
     mode_used: str = ""
     timestamp: str = ""
 
-def generate_illusion_var(length=8):
-    # Genera nombres difíciles de distinguir visualmente
-    return "_" + "".join(random.choices("O0I1", k=length))
+# OPTIMIZACIÓN: random.choices es mucho más rápido y ligero en memoria para Python
+def generate_illusion_var(length=14):
+    return "_" + "".join(random.choices("O0I1l", k=length))
 
-def compile_to_single_line_vm(source_code: str) -> str:
+def generate_anti_ai_junk() -> str:
+    junk = ""
+    # Genera scripts basura dinámicos para confundir descompiladores
+    for _ in range(random.randint(1, 2)):
+        v1, v2, v3, v4 = generate_illusion_var(12), generate_illusion_var(12), generate_illusion_var(14), generate_illusion_var(6)
+        
+        junk += (
+            f"local {v1} = {random.randint(100, 9999)}; "
+            f"local {v2} = function({v3}) "
+            f"  local {v1} = {v3} and {random.randint(10, 50)}; "
+            f"  for {v4} = 1, {random.randint(3, 8)} do "
+            f"    {v1} = ({v1} or 0) + {random.randint(1, 5)}; "
+            f"  end "
+            f"  return {v1}; "
+            f"end; "
+            f"if {v2}({v1}) == -99999 then "
+            f"  local {v3} = setmetatable({{}}, {{__index = function(t,k) return k end}}); "
+            f"  {v1} = {v3}[{random.randint(1, 100)}]; "
+            f"end; "
+        )
+    return junk
+
+def obfuscate_single_layer(code: str) -> str:
     """
-    Cifra el código fuente completo como una secuencia de bytes protegida,
-    generando un entorno de ejecución dinámica en memoria (RAM) optimizado
-    para ejecutarse estrictamente en UNA SOLA LÍNEA de código.
+    Aplica una capa de ofuscación utilizando virtualización por tabla balanceada.
     """
-    # Generar una clave de cifrado aleatoria
-    key_shift = random.randint(10, 80)
+    base_key = random.randint(20, 180)
+    multiplier = random.randint(3, 9)
     
-    # Convertir todo el script original del usuario en un array de bytes cifrados
-    encrypted_bytes = [(ord(char) + key_shift) % 256 for char in source_code]
-    bytes_string = ",".join(map(str, encrypted_bytes))
+    # Cifrado de bytes
+    encoded_bytes = bytearray()
+    last_val = base_key
+    for byte in code.encode('utf-8'):
+        cipher_byte = (byte + last_val + multiplier) % 256
+        encoded_bytes.append(cipher_byte)
+        last_val = cipher_byte
+        
+    encoded_hex = encoded_bytes.hex()
     
-    # Generar identificadores aleatorios para los componentes del intérprete
-    v_bytecode = generate_illusion_var()
-    v_result = generate_illusion_var()
-    v_char_code = generate_illusion_var()
-    v_loader = generate_illusion_var()
-    v_env = generate_illusion_var()
+    # Fragmentación segura en tablas para evitar colapso de registros de Lua (Error 255)
+    chunk_size = 2000 
+    chunks = [encoded_hex[i:i+chunk_size] for i in range(0, len(encoded_hex), chunk_size)]
+    table_elements = ", ".join(f'"{c}"' for c in chunks)
     
-    # Construcción de las partes del decodificador en memoria
-    # Usamos sintaxis compacta de Lua que permite omitir saltos de línea
-    step_1_init = f"local {v_bytecode}={{ {bytes_string} }} "
-    step_2_env = f"local {v_env}=getfenv and getfenv() or _ENV "
-    step_3_decode = f"local {v_result}='' for i=1,#{v_bytecode} do {v_result}={v_result}..string.char(({v_bytecode}[i]-{key_shift})%256) end "
-    step_4_execute = f"local {v_loader}=loadstring or load if {v_loader} then {v_loader}({v_result})() end"
+    # Generación de variables fantasma
+    v_hex, v_proxy, v_res, v_state, v_idx, v_last = (generate_illusion_var() for _ in range(6))
+    f_sub, f_tonum, f_char, f_insert, f_concat, f_load = (generate_illusion_var() for _ in range(6))
     
-    # Combinar todas las instrucciones separadas únicamente por espacios o estructuras válidas
-    full_vm_logic = f"do {step_1_init}{step_2_env}{step_3_decode}{step_4_execute} end"
+    junk_pre = generate_anti_ai_junk()
+    junk_post = generate_anti_ai_junk()
     
-    return full_vm_logic
+    setup_logic = (
+        f"{junk_pre} "
+        f"local {f_sub},{f_tonum},{f_char},{f_insert},{f_concat},{f_load} = string.sub,tonumber,string.char,table.insert,table.concat,loadstring or load; "
+        f"local {v_hex} = {f_concat}({{{table_elements}}}); "
+        f"local {v_proxy} = setmetatable({{}}, {{ "
+        f"  __index = function(t, k) "
+        f"    local s_str = {f_sub}({v_hex}, k, k + 1); "
+        f"    if s_str == \"\" then return nil end; "
+        f"    return ({f_tonum}(s_str, 16) + k) % 256; "
+        f"  end "
+        f"}}); "
+        f"local {v_res} = {{}}; "
+        f"local {v_state} = 1; "
+        f"local {v_idx} = 1; "
+        f"local {v_last} = {base_key}; "
+    )
+    
+    loop_logic = (
+        f"while {v_state} ~= 0 do "
+            f"if {v_state} == 1 then "
+                f"if {v_idx} > #{v_hex} then {v_state} = 4 else {v_state} = 2 end; "
+            f"elseif {v_state} == 2 then "
+                f"local m_val = {v_proxy}[{v_idx}]; "
+                f"if not m_val then {v_state} = 4; else "
+                f"  local c_byte = (m_val - {v_idx}) % 256; "
+                f"  local dec_b = (c_byte - {v_last} - {multiplier}) % 256; "
+                f"  {f_insert}({v_res}, {f_char}(dec_b)); "
+                f"  {v_last} = c_byte; {v_state} = 3; "
+                f"end; "
+            f"elseif {v_state} == 3 then "
+                f"{v_idx} = {v_idx} + 2; {v_state} = 1; "
+            f"elseif {v_state} == 4 then "
+                f"{v_state} = 0; "
+            f"end "
+        f"end; "
+        f"{junk_post} "
+    )
+    
+    run_logic = (
+        f"local f, e = {f_load}({f_concat}({v_res})); "
+        f"if not f then error(tostring(e)) end; "
+        f"return f(...); "
+    )
+    
+    return f"return(function(...) {setup_logic}{loop_logic}{run_logic} end)(...)"
 
 def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
-    # Generar la estructura limpia en una sola línea
-    single_line_code = compile_to_single_line_vm(code)
+    # CORRECCIÓN: Toma las capas que pidió el usuario y las limita entre 1 y 8
+    # para evitar que saturen el servidor con peticiones infinitas.
+    actual_layers = max(1, min(requested_layers, 8))
     
-    # Banner opcional en una sola línea usando comentarios de bloque de Lua
+    current_code = code
+    for _ in range(actual_layers):
+        current_code = obfuscate_single_layer(current_code)
+        
     banner = """--[[
                                                                   <'         -n:                   
                                                                icI        ^v0!                      
@@ -100,28 +169,34 @@ def obfuscate_code(code: str, mode: str, requested_layers: int) -> str:
                                                  _$$@W~     `0WL!      _@$$$$@L                     
                                                 :&@c      ,{'         .k@$$@J                       
                                           :l   I%X.                  !&$$$X'                        
-                                       .\l    u$Yic]  `>           >#$@B\                           
+                                       .\\l    u$Yic]  `>           >#$@B\\                           
                                      ;L~    -%$$$$U;|+          'zB$@pi                             
                                    ^aj    |8@$$$$$B]         .J%$@*i                                
                                  `a$f':(B$$$$$$$@c       '+a@B*r.                                   
                                 c$$$$$$$@Bz>/$$k"     ~cXt-^                                        
                               ~%$@$$$$B/'  IB%l                                                     
-                             w$$$$@BJ'    _%\                                                       
+                             w$$$$@BJ'    _%\\                                                       
                            ~B$$$@a<      Un.                                                        
-                         'a$$$@\       :p.                                                          
+                         'a$$$@\\       :p.                                                          
                         n@$@p"       "x                                                             
                       )8@#?                                                                         
                     iB@r.                                                                           
                   ]WY.                                                                              
                 /j"  
-
                 
                                             https://space.spacecp.workers.dev/
-                                https://space-obfuscator.spacecp.workers.dev/
-                        https://discord.gg/7dt2A6DJZA
-]]--\n"""
-    
-    return f"{banner}{single_line_code}"
+                                            https://space-obfuscator.spacecp.workers.dev/
+                                            https://discord.gg/7dt2A6DJZA
+]]--"""
+    return f"{banner}\n{current_code}\n"
+
+@app.get("/")
+async def root():
+    return {"status": "online"}
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.post("/api/obfuscate", response_model=ObfuscateResponse)
 async def obfuscate(request: ObfuscateRequest):
@@ -129,10 +204,12 @@ async def obfuscate(request: ObfuscateRequest):
         if not request.code or not request.code.strip():
             return ObfuscateResponse(success=False, error="El código está vacío")
         
+        # Limite de peso: 10 MB (Suficiente para soportar múltiples capas)
         max_size = 10 * 1024 * 1024 
         if len(request.code) > max_size:
             return ObfuscateResponse(success=False, error="El código original excede el límite permitido")
         
+        # Obtenemos las capas solicitadas desde el JSON del frontend
         layers_to_apply = request.layers if request.layers is not None else 5
         
         obfuscated = obfuscate_code(request.code, request.mode, layers_to_apply)
@@ -142,15 +219,11 @@ async def obfuscate(request: ObfuscateRequest):
             obfuscated_code=obfuscated,
             original_size=len(request.code),
             obfuscated_size=len(obfuscated),
-            mode_used="Anti-AI Dynamic One-Line VM",
+            mode_used=f"High Protection ({min(layers_to_apply, 8)}-Layers + Anti-AI)",
             timestamp=datetime.now().isoformat()
         )
     except Exception as e:
         return ObfuscateResponse(success=False, error=f"Error inesperado: {str(e)}")
-
-@app.get("/")
-async def root():
-    return {"status": "online", "engine": "OneLineVM"}
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.isdir(FRONTEND_DIR):
